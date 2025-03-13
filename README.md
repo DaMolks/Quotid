@@ -1,7 +1,7 @@
 # Quotid
 
 <p align="center">
-  <img src="./assets/logo.png" alt="Quotid Logo" width="200" />
+  <img src="https://github.com/DaMolks/Quotid/raw/main/assets/logo.png" alt="Quotid Logo" width="200" />
 </p>
 
 Quotid est une application mobile pour organiser et améliorer sa vie quotidienne. Elle aide les utilisateurs à suivre leurs activités quotidiennes et à progresser vers une meilleure version d'eux-mêmes.
