@@ -1,0 +1,1 @@
+Ce fichier existe uniquement pour maintenir le dossier assets dans le dépôt.
