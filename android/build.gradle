@@ -14,10 +14,15 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath("com.android.tools.build:gradle:7.4.2")
+        classpath("com.android.tools.build:gradle:8.1.0")  // Mise à jour pour compatibilité avec Gradle 8.5
         classpath("com.facebook.react:react-native-gradle-plugin")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
     }
+}
+
+// Permet au plugin React Native d'être accessible dans les projets
+plugins {
+    id("com.facebook.react.rootproject") apply false
 }
 
 allprojects {
