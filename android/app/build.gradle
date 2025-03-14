@@ -35,7 +35,8 @@ react {
     bundleCommand = "bundle"
     //
     //   The path to the CLI configuration file. Default is empty.
-    bundleConfig = file("")
+    // Ligne problématique modifiée : au lieu de file("") qui crée un chemin vide, on met null
+    bundleConfig = null
     //
     //   The name of the generated asset file containing your JS bundle
     bundleAssetName = "index.android.bundle"
