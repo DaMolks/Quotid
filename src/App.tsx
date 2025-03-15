@@ -1,5 +1,6 @@
 import React, {useEffect} from 'react';
 import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
+import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
 import {ThemeProvider, useTheme} from './context/ThemeContext';
 
 // Composant contenu qui utilise le thème
@@ -7,14 +8,14 @@ const AppContent = () => {
   const {theme, isDark, toggleTheme} = useTheme();
   
   useEffect(() => {
-    console.log('AppContent monté avec ThemeProvider');
+    console.log('AppContent monté avec ThemeProvider et SafeAreaProvider');
   }, []);
 
   return (
-    <View style={[styles.container, {backgroundColor: theme.background}]}>
-      <Text style={[styles.title, {color: theme.primary}]}>Quotid - Étape 1</Text>
+    <SafeAreaView style={[styles.container, {backgroundColor: theme.background}]}>
+      <Text style={[styles.title, {color: theme.primary}]}>Quotid - Étape 2</Text>
       <Text style={[styles.subtitle, {color: theme.text}]}>
-        ThemeProvider fonctionne correctement !
+        ThemeProvider et SafeAreaProvider fonctionnent !
       </Text>
       
       <TouchableOpacity 
@@ -25,20 +26,22 @@ const AppContent = () => {
           Basculer en mode {isDark ? 'clair' : 'sombre'}
         </Text>
       </TouchableOpacity>
-    </View>
+    </SafeAreaView>
   );
 };
 
-// Composant App qui fournit le context de thème
+// Composant App qui fournit les contextes
 const App = () => {
   useEffect(() => {
-    console.log('App avec ThemeProvider chargée');
+    console.log('App avec providers chargée');
   }, []);
 
   return (
-    <ThemeProvider>
-      <AppContent />
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <ThemeProvider>
+        <AppContent />
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 };
 
