@@ -17,18 +17,21 @@ import {useNotification} from '../context/NotificationContext';
 
 const SettingsScreen = () => {
   const {theme, isDark, toggleTheme} = useTheme();
-  const {cancelAllNotifications} = useNotification();
+  const {cancelAllNotifications, requestPermissions} = useNotification();
 
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
   // Activer/désactiver les notifications
   const handleNotificationsToggle = (value: boolean) => {
-    setNotificationsEnabled(value);
-    
-    if (!value) {
+    if (value) {
+      // Si on active les notifications, demander les permissions
+      requestPermissions();
+    } else {
       // Si les notifications sont désactivées, annuler toutes les notifications existantes
       cancelAllNotifications();
     }
+    
+    setNotificationsEnabled(value);
   };
 
   // Effacer toutes les données
@@ -104,6 +107,21 @@ const SettingsScreen = () => {
               thumbColor="#f4f3f4"
             />
           </View>
+          
+          <TouchableOpacity
+            style={[
+              styles.settingItem,
+              {backgroundColor: theme.card, borderColor: theme.border},
+            ]}
+            onPress={requestPermissions}>
+            <View style={styles.settingContent}>
+              <Icon name="bell-ring-outline" size={24} color={theme.primary} />
+              <Text style={[styles.settingTitle, {color: theme.text}]}>
+                Demander les permissions
+              </Text>
+            </View>
+            <Icon name="chevron-right" size={24} color={theme.text} />
+          </TouchableOpacity>
         </View>
 
         {/* Catégories */}
