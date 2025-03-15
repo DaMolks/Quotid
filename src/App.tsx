@@ -3,16 +3,17 @@ import {View, Text, StyleSheet, TouchableOpacity, ActivityIndicator} from 'react
 import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
 import {ThemeProvider, useTheme} from './context/ThemeContext';
 import {DatabaseProvider, useDatabase} from './context/DatabaseContext';
-// Nous avons retiré NotificationProvider pour isoler le problème
+import {NotificationProvider, useNotification} from './context/NotificationContext';
 
-// Composant contenu qui utilise les contextes
+// Composant contenu qui utilise tous les contextes
 const AppContent = () => {
   const {theme, isDark, toggleTheme} = useTheme();
   const {database, isLoading: dbLoading, error: dbError} = useDatabase();
+  const {scheduleNotification, cancelAllNotifications} = useNotification();
   const [categoryCount, setCategoryCount] = useState(0);
   
   useEffect(() => {
-    console.log('AppContent monté sans NotificationProvider');
+    console.log('AppContent monté avec tous les providers (version factice des notifications)');
     
     // Si la base de données est disponible, comptons les catégories
     if (database && !dbLoading) {
@@ -30,6 +31,18 @@ const AppContent = () => {
       getCategoryCount();
     }
   }, [database, dbLoading, dbError]);
+
+  // Fonction pour tester les notifications
+  const testNotification = () => {
+    scheduleNotification({
+      id: 'test-notification',
+      title: 'Test de notification',
+      message: 'Cette notification est factice, mais fonctionne !',
+      date: new Date(),
+      autoCancel: true,
+      autoCancelTime: 1 // Disparaît après 1 minute
+    });
+  };
 
   if (dbLoading) {
     return (
@@ -58,14 +71,14 @@ const AppContent = () => {
 
   return (
     <SafeAreaView style={[styles.container, {backgroundColor: theme.background}]}>
-      <Text style={[styles.title, {color: theme.primary}]}>Quotid - Diagnostic</Text>
+      <Text style={[styles.title, {color: theme.primary}]}>Quotid - Étape 4 (corrigée)</Text>
       <Text style={[styles.subtitle, {color: theme.text}]}>
-        Problème identifié : NotificationProvider
+        Tous les providers fonctionnent avec la version factice des notifications !
       </Text>
       
       <View style={[styles.infoBox, {backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}]}>
         <Text style={{color: theme.text}}>
-          Le problème vient du NotificationProvider. Nous allons devoir le corriger.
+          Base de données initialisée avec {categoryCount} catégories
         </Text>
       </View>
       
@@ -78,6 +91,15 @@ const AppContent = () => {
             Mode {isDark ? 'clair' : 'sombre'}
           </Text>
         </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={[styles.button, {backgroundColor: theme.info}]}
+          onPress={testNotification}
+        >
+          <Text style={styles.buttonText}>
+            Tester notification
+          </Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -86,14 +108,16 @@ const AppContent = () => {
 // Composant App qui fournit les contextes
 const App = () => {
   useEffect(() => {
-    console.log('App sans NotificationProvider chargée');
+    console.log('App avec tous les providers chargée (version factice des notifications)');
   }, []);
 
   return (
     <SafeAreaProvider>
       <ThemeProvider>
         <DatabaseProvider>
-          <AppContent />
+          <NotificationProvider>
+            <AppContent />
+          </NotificationProvider>
         </DatabaseProvider>
       </ThemeProvider>
     </SafeAreaProvider>
