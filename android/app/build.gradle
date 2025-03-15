@@ -131,6 +131,14 @@ android {
     lintOptions {
         abortOnError false
     }
+    
+    // Configuration pour React Native Vector Icons
+    // Cette configuration est nécessaire pour que les icônes s'affichent correctement
+    sourceSets {
+        main {
+            assets.srcDirs += ['../../node_modules/react-native-vector-icons/Fonts']
+        }
+    }
 }
 
 // Configuration pour la migration vers AndroidX
