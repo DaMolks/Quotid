@@ -105,6 +105,25 @@ android {
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
     }
+    
+    // Ajout de la configuration pour résoudre les problèmes de classes dupliquées
+    packagingOptions {
+        pickFirst '**/*.so'
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/license.txt'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/NOTICE.txt'
+        exclude 'META-INF/notice.txt'
+        exclude 'META-INF/ASL2.0'
+        exclude("META-INF/*.kotlin_module")
+        exclude("META-INF/services/javax.annotation.processing.Processor")
+        exclude("**/attach_hotspot_windows.dll")
+        exclude("META-INF/licenses/**")
+        exclude("META-INF/AL2.0")
+        exclude("META-INF/LGPL2.1")
+    }
 }
 
 dependencies {
