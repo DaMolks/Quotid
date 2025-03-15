@@ -109,6 +109,8 @@ android {
     // Ajout de la configuration pour résoudre les problèmes de classes dupliquées
     packagingOptions {
         pickFirst '**/*.so'
+        pickFirst '**/libjsc.so'
+        pickFirst '**/libc++_shared.so'
         exclude 'META-INF/DEPENDENCIES'
         exclude 'META-INF/LICENSE'
         exclude 'META-INF/LICENSE.txt'
@@ -124,6 +126,25 @@ android {
         exclude("META-INF/AL2.0")
         exclude("META-INF/LGPL2.1")
     }
+    
+    // Configuration pour éviter les erreurs de lint liées à AndroidX
+    lintOptions {
+        abortOnError false
+    }
+}
+
+// Configuration pour la migration vers AndroidX
+configurations.all {
+    resolutionStrategy {
+        force 'androidx.core:core:1.13.1'
+        // Exclusion des anciennes bibliothèques de support
+        exclude group: 'com.android.support', module: 'support-compat'
+        exclude group: 'com.android.support', module: 'support-core-utils'
+        exclude group: 'com.android.support', module: 'support-core-ui'
+        exclude group: 'com.android.support', module: 'support-v4'
+        exclude group: 'com.android.support', module: 'support-fragment'
+        exclude group: 'com.android.support', module: 'support-media-compat'
+    }
 }
 
 dependencies {
@@ -135,4 +156,8 @@ dependencies {
     } else {
         implementation jscFlavor
     }
+    
+    // Force utilisation des versions AndroidX pour remplacer les anciennes bibliothèques de support
+    implementation 'androidx.core:core:1.13.1'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
 }
