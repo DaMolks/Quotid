@@ -1,105 +1,97 @@
-# Quotid
+This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
 
-<p align="center">
-  <img src="https://github.com/DaMolks/Quotid/raw/main/assets/logo.png" alt="Quotid Logo" width="200" />
-</p>
+# Getting Started
 
-Quotid est une application mobile pour organiser et améliorer sa vie quotidienne. Elle aide les utilisateurs à suivre leurs activités quotidiennes et à progresser vers une meilleure version d'eux-mêmes.
+> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
 
-## Fonctionnalités principales
+## Step 1: Start Metro
 
-- **Calendrier évolué** : Visualisation et gestion des événements par catégories (travail, sport, tâches ménagères, etc.)
-- **Notifications intelligentes** : Rappels contextuels qui s'adaptent aux habitudes de l'utilisateur et disparaissent automatiquement quand ils ne sont plus pertinents
-- **Suivi de progression** : Statistiques et visualisations pour suivre l'amélioration au fil du temps
-- **Écrans spécialisés** : Interfaces adaptées selon le type d'activité (sport, tâches ménagères, etc.)
+First, you will need to run **Metro**, the JavaScript build tool for React Native.
 
-## Prérequis
+To start the Metro dev server, run the following command from the root of your React Native project:
 
-Avant de commencer, assurez-vous d'avoir installé les outils suivants :
+```sh
+# Using npm
+npm start
 
-- [Node.js](https://nodejs.org/) (v14.0.0 ou plus)
-- [npm](https://www.npmjs.com/) (v6.0.0 ou plus)
-- [React Native CLI](https://reactnative.dev/docs/environment-setup)
-- [Android Studio](https://developer.android.com/studio) (pour le développement Android)
-- [Xcode](https://developer.apple.com/xcode/) (pour le développement iOS, Mac uniquement)
+# OR using Yarn
+yarn start
+```
 
-## Installation
+## Step 2: Build and run your app
 
-1. Clonez ce dépôt :
-   ```bash
-   git clone https://github.com/DaMolks/Quotid.git
-   cd Quotid
-   ```
-
-2. Installez les dépendances :
-   ```bash
-   npm install
-   ```
-
-3. Pour iOS, installez les pods (macOS uniquement) :
-   ```bash
-   cd ios && pod install && cd ..
-   ```
-
-## Démarrage
+With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
 
 ### Android
 
-```bash
+```sh
+# Using npm
 npm run android
+
+# OR using Yarn
+yarn android
 ```
 
-### iOS (macOS uniquement)
+### iOS
 
-```bash
+For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
+
+The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
+
+```sh
+bundle install
+```
+
+Then, and every time you update your native dependencies, run:
+
+```sh
+bundle exec pod install
+```
+
+For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
+
+```sh
+# Using npm
 npm run ios
+
+# OR using Yarn
+yarn ios
 ```
 
-## Structure du projet
+If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
 
-```
-Quotid/
-├── src/                  # Code source de l'application
-│   ├── components/       # Composants réutilisables
-│   ├── context/          # Contextes React (thème, base de données, notifications)
-│   ├── models/           # Types et interfaces
-│   ├── navigation/       # Configuration de la navigation
-│   ├── screens/          # Écrans de l'application
-│   ├── services/         # Services (gestion des événements, catégories, statistiques)
-│   ├── utils/            # Fonctions utilitaires
-│   ├── App.tsx           # Composant racine de l'application
-├── android/              # Configuration et code natif Android
-├── ios/                 # Configuration et code natif iOS
-├── index.js             # Point d'entrée de l'application
-├── package.json         # Dépendances et scripts
-├── README.md            # Ce fichier
-```
+This is one way to run your app — you can also build it directly from Android Studio or Xcode.
 
-## Fonctionnalités à venir
+## Step 3: Modify your app
 
-- **Synchronisation cloud** : Sauvegarde et synchronisation des données entre plusieurs appareils
-- **Intégration avec d'autres services** : Connexion avec des applications de fitness, de sommeil, etc.
-- **Fonctionnalités sociales** : Challenges et comparaisons entre amis
-- **Système de gamification** : Points et récompenses pour maintenir la motivation
+Now that you have successfully run the app, let's make changes!
 
-## Technologies utilisées
+Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
 
-- [React Native](https://reactnative.dev/) - Framework pour le développement mobile cross-platform
-- [TypeScript](https://www.typescriptlang.org/) - Typage statique pour JavaScript
-- [React Navigation](https://reactnavigation.org/) - Navigation entre les écrans
-- [SQLite](https://www.sqlite.org/) - Base de données locale
-- [React Native Chart Kit](https://github.com/indiespirit/react-native-chart-kit) - Visualisations graphiques
+When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
 
-## Contribution
+- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
+- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
 
-Les contributions sont bienvenues ! Pour contribuer :
+## Congratulations! :tada:
 
-1. Forkez le projet
-2. Créez une branche pour votre fonctionnalité (`git checkout -b feature/amazing-feature`)
-3. Commitez vos changements (`git commit -m 'Add some amazing feature'`)
-4. Poussez vers la branche (`git push origin feature/amazing-feature`)
-5. Ouvrez une Pull Request
+You've successfully run and modified your React Native App. :partying_face:
 
-## Licence
+### Now what?
 
-Ce projet est sous licence MIT - voir le fichier LICENSE pour plus de détails.
+- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
+- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
+
+# Troubleshooting
+
+If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
+
+# Learn More
+
+To learn more about React Native, take a look at the following resources:
+
+- [React Native Website](https://reactnative.dev) - learn more about React Native.
+- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
+- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
+- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
+- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
