@@ -1,6 +1,7 @@
 import React, {createContext, useState, useEffect, useContext, ReactNode} from 'react';
-import PushNotification from 'react-native-push-notification';
-import PushNotificationIOS from '@react-native-community/push-notification-ios';
+// Nous commenterons ces importations, car elles sont probablement la source du problème
+// import PushNotification from 'react-native-push-notification';
+// import PushNotificationIOS from '@react-native-community/push-notification-ios';
 
 interface NotificationContextType {
   scheduleNotification: (options: ScheduleOptions) => void;
@@ -42,98 +43,25 @@ export const NotificationProvider = ({children}: NotificationProviderProps) => {
   const [timers, setTimers] = useState<{[key: string]: NodeJS.Timeout}>({});
 
   useEffect(() => {
-    // Configuration des notifications
-    PushNotification.configure({
-      onRegister: function (token) {
-        console.log('TOKEN:', token);
-      },
-      onNotification: function (notification) {
-        console.log('NOTIFICATION:', notification);
-        notification.finish(PushNotificationIOS.FetchResult.NoData);
-      },
-      permissions: {
-        alert: true,
-        badge: true,
-        sound: true,
-      },
-      popInitialNotification: true,
-      requestPermissions: true,
-    });
-
-    // Création des canaux de notification (Android)
-    PushNotification.createChannel(
-      {
-        channelId: 'default-channel',
-        channelName: 'Default Channel',
-        channelDescription: 'A default channel for notifications',
-        soundName: 'default',
-        importance: 4, // Importance max
-        vibrate: true,
-      },
-      (created) => console.log(`Channel created: ${created}`),
-    );
-
+    console.log('NotificationProvider initialisé avec des fonctions factices');
+    // Nous ne configurons pas les notifications pour éviter l'écran blanc
+    
     // Nettoyer les timers lors du démontage
     return () => {
       Object.values(timers).forEach(timer => clearTimeout(timer));
     };
   }, [timers]);
 
-  // Planifier une notification
-  const scheduleNotification = ({id, title, message, date, category = 'default', data = {}, autoCancel = true, autoCancelTime = 30}: ScheduleOptions) => {
-    // Annuler toute notification existante avec le même ID
-    cancelNotification(id);
-
-    PushNotification.localNotificationSchedule({
-      id,
-      title,
-      message,
-      date,
-      channelId: 'default-channel',
-      soundName: 'default',
-      userInfo: {
-        ...data,
-        category,
-      },
-      allowWhileIdle: true,
-    });
-
-    // Si autoCancel est activé, planifier l'annulation automatique
-    if (autoCancel) {
-      // Calcul du temps d'annulation (temps de l'événement + temps d'auto-annulation)
-      const cancelTime = new Date(date.getTime() + autoCancelTime * 60000);
-      const timeUntilCancel = cancelTime.getTime() - Date.now();
-
-      // Si le temps d'annulation est dans le futur
-      if (timeUntilCancel > 0) {
-        // Nettoyer tout timer existant pour cet ID
-        if (timers[id]) {
-          clearTimeout(timers[id]);
-        }
-
-        // Créer un nouveau timer
-        const timerId = setTimeout(() => {
-          cancelNotification(id);
-          // Nettoyer le timer de la liste
-          setTimers(prev => {
-            const newTimers = {...prev};
-            delete newTimers[id];
-            return newTimers;
-          });
-        }, timeUntilCancel);
-
-        // Stocker le timer
-        setTimers(prev => ({
-          ...prev,
-          [id]: timerId,
-        }));
-      }
-    }
+  // Version factice des fonctions pour éviter les erreurs
+  const scheduleNotification = ({id, title, message}: ScheduleOptions) => {
+    console.log('Notification factice programmée:', {id, title, message});
+    // Affichage d'une alerte au lieu d'une vraie notification
+    alert(`[NOTIFICATION FACTICE]\nTitre: ${title}\nMessage: ${message}`);
   };
 
-  // Annuler une notification spécifique
+  // Version factice de cancelNotification
   const cancelNotification = (id: string) => {
-    PushNotification.cancelLocalNotification(id);
+    console.log('Annulation factice de notification:', id);
     
     // Nettoyer le timer associé s'il existe
     if (timers[id]) {
@@ -146,9 +74,9 @@ export const NotificationProvider = ({children}: NotificationProviderProps) => {
     }
   };
 
-  // Annuler toutes les notifications
+  // Version factice de cancelAllNotifications
   const cancelAllNotifications = () => {
-    PushNotification.cancelAllLocalNotifications();
+    console.log('Annulation factice de toutes les notifications');
     
     // Nettoyer tous les timers
     Object.values(timers).forEach(timer => clearTimeout(timer));
