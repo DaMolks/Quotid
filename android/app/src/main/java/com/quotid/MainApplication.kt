@@ -20,6 +20,8 @@ class MainApplication : Application(), ReactApplication {
             PackageList(this).packages.apply {
               // Packages that cannot be autolinked yet can be added manually here, for example:
               // add(MyReactNativePackage())
+              add(ToastPackage()) // Ajout du package Toast existant
+              add(AdvancedNotificationPackage()) // Ajout de notre nouveau package pour les notifications avancées
             }
 
         override fun getJSMainModuleName(): String = "index"
