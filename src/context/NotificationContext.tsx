@@ -12,11 +12,13 @@ interface ScheduleOptions {
   data?: any;
   autoCancel?: boolean;
   autoCancelTime?: number; // Temps en minutes après lequel la notification disparaît automatiquement
+  actions?: string[]; // Boutons d'action pour les notifications interactives
 }
 
 // Interface pour le contexte de notification
 interface NotificationContextType {
   scheduleNotification: (options: ScheduleOptions) => void;
+  scheduleInteractiveNotification: (options: ScheduleOptions & { actions: string[] }) => void;
   cancelNotification: (id: string) => void;
   cancelAllNotifications: () => void;
   requestPermissions: () => Promise<boolean>;
@@ -58,34 +60,52 @@ export const NotificationProvider = ({children}: NotificationProviderProps) => {
     try {
       // Configuration générale des notifications
       PushNotification.configure({
-        // (required) Called when a remote or local notification is opened or received
+        // Called when Token is generated
         onRegister: function (token) {
           console.log('TOKEN:', token);
         },
         
-        // (required) Called when a remote is received or opened, or local notification is opened
+        // Called when a notification is received/opened
         onNotification: function (notification) {
           console.log('NOTIFICATION REÇUE:', notification);
           
-          // Traitement spécifique selon le type de notification
-          if (notification.userInfo && notification.userInfo.category) {
-            console.log('Catégorie de notification:', notification.userInfo.category);
+          // Process the notification action
+          const actionId = notification.action;
+          if (actionId) {
+            console.log('Action sélectionnée:', actionId);
+            
+            // Handle specific actions
+            switch(actionId) {
+              case 'complete':
+                console.log('Marquer comme terminé');
+                Alert.alert('Événement terminé', 'L\'événement a été marqué comme terminé');
+                break;
+              case 'postpone':
+                console.log('Reporter l\'événement');
+                Alert.alert('Événement reporté', 'L\'événement a été reporté de 30 minutes');
+                break;
+              case 'details':
+                console.log('Voir les détails');
+                Alert.alert('Détails', 'Affichage des détails de l\'événement');
+                break;
+              default:
+                console.log('Action non reconnue');
+            }
           }
           
-          // Only call finish if the function exists (iOS requirement)
+          // Finish processing (required for iOS)
           if (notification.finish) {
             notification.finish();
-            console.log('Notification.finish() appelé');
           }
         },
         
-        // (optional) Called when Registered Action is pressed and invokeApp is false
+        // Called when Action is pressed and invokeApp is false
         onAction: function (notification) {
           console.log('ACTION:', notification.action);
           console.log('NOTIFICATION:', notification);
         },
         
-        // (optional) Called when the user fails to register for remote notifications
+        // Called when registration fails
         onRegistrationError: function(err) {
           console.error('Erreur d\'enregistrement des notifications:', err.message, err);
         },
@@ -97,10 +117,7 @@ export const NotificationProvider = ({children}: NotificationProviderProps) => {
           sound: true,
         },
         
-        // Should the initial notification be popped automatically
         popInitialNotification: true,
-        
-        // Request permissions on app start
         requestPermissions: false,
       });
       
@@ -143,7 +160,7 @@ export const NotificationProvider = ({children}: NotificationProviderProps) => {
           },
         );
 
-        // Canal pour les rappels d'événements importants
+        // Canal pour les rappels d'événements importants avec actions
         PushNotification.createChannel(
           {
             channelId: 'reminders-channel',
@@ -152,6 +169,8 @@ export const NotificationProvider = ({children}: NotificationProviderProps) => {
             soundName: 'default',
             importance: Importance.MAX,
             vibrate: true,
+            // Actions possibles pour ce canal
+            actions: ["Terminer", "Reporter", "Détails"],
           },
           (created) => {
             console.log(`Canal de rappels créé: ${created}`);
@@ -172,6 +191,22 @@ export const NotificationProvider = ({children}: NotificationProviderProps) => {
             console.log(`Canal système créé: ${created}`);
             setChannelsCreated(true);
           },
+        );
+        
+        // Canal pour les notifications interactives
+        PushNotification.createChannel(
+          {
+            channelId: 'interactive-channel',
+            channelName: 'Notifications Interactives',
+            channelDescription: 'Notifications avec boutons d\'action',
+            soundName: 'default',
+            importance: Importance.HIGH,
+            vibrate: true,
+            actions: ["Accepter", "Refuser", "Plus tard"],
+          },
+          (created) => {
+            console.log(`Canal interactif créé: ${created}`);
+          }
         );
       } catch (error) {
         console.error('Erreur lors de la création des canaux de notification:', error);
@@ -272,9 +307,11 @@ export const NotificationProvider = ({children}: NotificationProviderProps) => {
     data = {},
     autoCancel = true,
     autoCancelTime = 30,
+    actions = [],
   }: ScheduleOptions) => {
     console.log(`Programmation de notification: ID=${id}, Titre=${title}, Date=${date.toISOString()}`);
     
+    // Approche directe qui fonctionne
     try {
       // Vérifier si les permissions sont accordées
       if (!hasPermission) {
@@ -305,6 +342,8 @@ export const NotificationProvider = ({children}: NotificationProviderProps) => {
         channelId = 'reminders-channel';
       } else if (category === 'system') {
         channelId = 'system-channel';
+      } else if (category === 'interactive') {
+        channelId = 'interactive-channel';
       }
       
       // Pour les notifications immédiates ou très proches
@@ -314,7 +353,7 @@ export const NotificationProvider = ({children}: NotificationProviderProps) => {
       if (isImmediate) {
         console.log('Envoi de notification immédiate (< 3s)');
         
-        // Notification locale immédiate
+        // Notification locale immédiate - approche directe
         PushNotification.localNotification({
           id: id,
           channelId: channelId,
@@ -322,13 +361,21 @@ export const NotificationProvider = ({children}: NotificationProviderProps) => {
           message: message,
           playSound: true,
           soundName: 'default',
+          actions: actions.length > 0 ? actions : undefined,
+          // Données spécifiques
           userInfo: {
             category: category,
             ...data,
           },
+          // Importance et priorité élevées
+          importance: "high",
+          priority: "high",
+          // Vibrations
+          vibrate: true,
+          vibration: 300,
         });
       } else {
-        // Notification planifiée
+        // Notification planifiée - approche directe
         console.log('Programmation de notification pour plus tard');
         
         PushNotification.localNotificationSchedule({
@@ -340,10 +387,18 @@ export const NotificationProvider = ({children}: NotificationProviderProps) => {
           allowWhileIdle: true, // Fonctionnera même si l'appareil est en mode économie d'énergie
           playSound: true,
           soundName: 'default',
+          actions: actions.length > 0 ? actions : undefined,
+          // Données spécifiques
           userInfo: {
             category: category,
             ...data,
           },
+          // Importance et priorité élevées
+          importance: "high",
+          priority: "high",
+          // Vibrations
+          vibrate: true,
+          vibration: 300,
         });
       }
 
@@ -388,6 +443,15 @@ export const NotificationProvider = ({children}: NotificationProviderProps) => {
       );
     }
   };
+  
+  // Planifier une notification interactive avec boutons d'action
+  const scheduleInteractiveNotification = (options: ScheduleOptions & { actions: string[] }) => {
+    // Utiliser la même fonction mais s'assurer que la catégorie est bien 'interactive'
+    scheduleNotification({
+      ...options,
+      category: 'interactive',
+    });
+  };
 
   // Annuler une notification spécifique
   const cancelNotification = (id: string) => {
@@ -430,6 +494,7 @@ export const NotificationProvider = ({children}: NotificationProviderProps) => {
     <NotificationContext.Provider
       value={{
         scheduleNotification,
+        scheduleInteractiveNotification,
         cancelNotification,
         cancelAllNotifications,
         requestPermissions,
