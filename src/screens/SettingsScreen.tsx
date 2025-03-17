@@ -18,6 +18,8 @@ import {useTheme} from '../context/ThemeContext';
 import {useNotification} from '../context/NotificationContext';
 // Import de notre système de notifications simples comme solution de secours
 import SimpleNotification from '../utils/SimpleNotification';
+// Import de l'outil de diagnostic et correctif
+import NotificationFix from '../utils/NotificationFix';
 
 const SettingsScreen = () => {
   const {theme, isDark, toggleTheme, refreshTheme} = useTheme();
@@ -30,6 +32,7 @@ const SettingsScreen = () => {
   } = useNotification();
 
   const [notificationsEnabled, setNotificationsEnabled] = useState(hasPermission);
+  const [diagnosing, setDiagnosing] = useState(false);
   
   // Surveiller le changement d'état des permissions
   useEffect(() => {
@@ -203,6 +206,45 @@ const SettingsScreen = () => {
       'Notification personnalisée envoyée',
       'Une notification avec données personnalisées va apparaître dans 2 secondes'
     );
+  };
+  
+  // Diagnostic et réparation des notifications
+  const runNotificationDiagnostic = async () => {
+    setDiagnosing(true);
+    
+    try {
+      // Exécuter le diagnostic
+      console.log("Lancement du diagnostic des notifications...");
+      const result = await NotificationFix.diagnose();
+      
+      // Afficher les résultats à l'utilisateur
+      Alert.alert(
+        'Diagnostic terminé',
+        `Vérifiez la console pour les détails.\n\nPermissions: ${result ? 'OK' : 'PROBLÈME'}`,
+        [
+          {
+            text: 'Réinitialiser',
+            onPress: async () => {
+              await NotificationFix.reset();
+              NotificationFix.forceDirectNotification();
+              Alert.alert(
+                'Réinitialisation terminée',
+                'Le système de notification a été réinitialisé. Vérifiez si vous recevez la notification de test.'
+              );
+            }
+          },
+          {
+            text: 'OK',
+            style: 'cancel'
+          }
+        ]
+      );
+    } catch (error) {
+      console.error("Erreur lors du diagnostic:", error);
+      Alert.alert('Erreur', 'Une erreur est survenue lors du diagnostic');
+    } finally {
+      setDiagnosing(false);
+    }
   };
 
   // Effacer toutes les données
@@ -383,6 +425,27 @@ const SettingsScreen = () => {
               </Text>
             </View>
             <Icon name="chevron-right" size={24} color={theme.text} />
+          </TouchableOpacity>
+          
+          {/* Nouvel élément: Diagnostic */}
+          <TouchableOpacity
+            style={[
+              styles.settingItem,
+              {backgroundColor: theme.card, borderColor: theme.border},
+            ]}
+            onPress={runNotificationDiagnostic}
+            disabled={diagnosing}>
+            <View style={styles.settingContent}>
+              <Icon name="tools" size={24} color={diagnosing ? theme.border : theme.primary} />
+              <Text style={[styles.settingTitle, {color: diagnosing ? theme.border : theme.text}]}>
+                {diagnosing ? 'Diagnostic en cours...' : 'Diagnostic et réparation'}
+              </Text>
+            </View>
+            {diagnosing ? (
+              <Icon name="loading" size={24} color={theme.primary} />
+            ) : (
+              <Icon name="chevron-right" size={24} color={theme.text} />
+            )}
           </TouchableOpacity>
           
           <TouchableOpacity
