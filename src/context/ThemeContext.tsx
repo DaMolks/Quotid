@@ -1,4 +1,9 @@
-import React, {createContext, useState, useContext, ReactNode} from 'react';
+import React, {createContext, useState, useContext, ReactNode, useEffect} from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// Version du thème - incrémentez cette valeur à chaque changement majeur de couleurs
+const THEME_VERSION = '1.0.0';
+const THEME_VERSION_KEY = 'theme_version';
 
 // Définition des couleurs du thème - Nouvelle palette vibrante et rigoureuse
 const lightTheme = {
@@ -67,6 +72,7 @@ interface ThemeContextType {
   theme: Theme;
   isDark: boolean;
   toggleTheme: () => void;
+  refreshTheme: () => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -85,15 +91,45 @@ interface ThemeProviderProps {
 
 export const ThemeProvider = ({children}: ThemeProviderProps) => {
   const [isDark, setIsDark] = useState(false);
+  const [themeVersion, setThemeVersion] = useState<string | null>(null);
+
+  // Vérifier si la version du thème a changé
+  useEffect(() => {
+    const checkThemeVersion = async () => {
+      try {
+        const storedVersion = await AsyncStorage.getItem(THEME_VERSION_KEY);
+        setThemeVersion(storedVersion);
+        
+        // Si la version stockée est différente de la version actuelle, forcer la mise à jour
+        if (storedVersion !== THEME_VERSION) {
+          console.log('Mise à jour du thème détectée - Actualisation des couleurs');
+          await AsyncStorage.setItem(THEME_VERSION_KEY, THEME_VERSION);
+          // Forcer un rafraîchissement du composant
+          setIsDark(prev => prev);
+        }
+      } catch (error) {
+        console.error('Erreur lors de la vérification de la version du thème:', error);
+      }
+    };
+    
+    checkThemeVersion();
+  }, []);
 
   const toggleTheme = () => {
     setIsDark(!isDark);
+  };
+  
+  // Fonction pour forcer le rafraîchissement du thème
+  const refreshTheme = () => {
+    console.log('Rafraîchissement forcé du thème');
+    setIsDark(prev => !prev); // Toggle temporaire
+    setTimeout(() => setIsDark(prev => !prev), 50); // Retour à l'état d'origine après 50ms
   };
 
   const theme = isDark ? darkTheme : lightTheme;
 
   return (
-    <ThemeContext.Provider value={{theme, isDark, toggleTheme}}>
+    <ThemeContext.Provider value={{theme, isDark, toggleTheme, refreshTheme}}>
       {children}
     </ThemeContext.Provider>
   );
