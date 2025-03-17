@@ -1,12 +1,19 @@
 package com.quotid;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.RemoteViews;
 
+import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
+
+import java.util.List;
 
 /**
  * Récepteur de diffusion pour gérer les actions sur les notifications.
@@ -17,54 +24,89 @@ public class NotificationActionReceiver extends BroadcastReceiver {
     
     // Actions
     public static final String ACTION_TOGGLE_ITEM = "com.quotid.TOGGLE_ITEM";
+    public static final String ACTION_COMPLETE_ALL = "com.quotid.COMPLETE_ALL";
+    public static final String ACTION_CLEAR_ALL = "com.quotid.CLEAR_ALL";
+    public static final String ACTION_CLOSE_NOTIFICATION = "com.quotid.CLOSE_NOTIFICATION";
     
     // Extras
     public static final String EXTRA_NOTIFICATION_ID = "notification_id";
+    public static final String EXTRA_CHECKLIST_ID = "checklist_id";
     public static final String EXTRA_ITEM_ID = "item_id";
-    public static final String EXTRA_ITEM_TEXT = "item_text";
-    public static final String EXTRA_ITEM_CHECKED = "item_checked";
     
     @Override
     public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
         Log.d(TAG, "Received action: " + action);
         
-        if (ACTION_TOGGLE_ITEM.equals(action)) {
-            // Extraire les données
-            int notificationId = intent.getIntExtra(EXTRA_NOTIFICATION_ID, -1);
-            int itemId = intent.getIntExtra(EXTRA_ITEM_ID, -1);
-            String itemText = intent.getStringExtra(EXTRA_ITEM_TEXT);
-            boolean wasChecked = intent.getBooleanExtra(EXTRA_ITEM_CHECKED, false);
-            
-            Log.d(TAG, "Toggle item " + itemId + " in notification " + notificationId + 
-                  ", was checked: " + wasChecked + ", text: " + itemText);
-            
-            // Mettre à jour l'état de l'élément (inversion de l'état)
-            boolean newCheckedState = !wasChecked;
-            
-            // Mettre à jour la notification
-            // Dans une implémentation complète, vous stockeriez ces états dans SharedPreferences
-            // et vous mettriez à jour l'interface utilisateur de l'application
-            
-            // Pour cet exemple, nous allons simplement créer un Intent qui sera renvoyé à l'application
-            // lorsqu'elle sera à nouveau active
-            Intent updateIntent = new Intent("com.quotid.ITEM_TOGGLED");
-            updateIntent.putExtra(EXTRA_ITEM_ID, itemId);
-            updateIntent.putExtra(EXTRA_ITEM_TEXT, itemText);
-            updateIntent.putExtra(EXTRA_ITEM_CHECKED, newCheckedState);
-            context.sendBroadcast(updateIntent);
-            
-            // Dans un cas réel, vous pourriez également mettre à jour la notification elle-même
-            // Mais cela nécessiterait de conserver l'état de tous les éléments
-            
-            // Pour le moment, nous fermons simplement la notification
-            NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
-            notificationManager.cancel(notificationId);
-            
-            // Créer une nouvelle notification avec l'état mis à jour
-            // NOTE: Dans une vraie implémentation, cela nécessiterait de conserver
-            // tous les éléments de la liste et leurs états
-            // Pour cette démo simplifiée, nous ne réaffichons pas la notification
+        if (action == null) return;
+        
+        // Extraire les données communes
+        int notificationId = intent.getIntExtra(EXTRA_NOTIFICATION_ID, -1);
+        String checklistId = intent.getStringExtra(EXTRA_CHECKLIST_ID);
+        
+        if (notificationId == -1 || checklistId == null) {
+            Log.e(TAG, "Données notification manquantes: id=" + notificationId + ", checklistId=" + checklistId);
+            return;
         }
+        
+        // Gestionnaire de données
+        ChecklistDataManager dataManager = ChecklistDataManager.getInstance(context);
+        
+        switch (action) {
+            case ACTION_TOGGLE_ITEM:
+                // Récupérer l'ID de l'élément
+                String itemId = intent.getStringExtra(EXTRA_ITEM_ID);
+                if (itemId == null) {
+                    Log.e(TAG, "ID d'élément manquant");
+                    return;
+                }
+                
+                // Charger la liste et trouver l'élément
+                List<ChecklistDataManager.ChecklistItem> items = dataManager.loadChecklist(checklistId);
+                boolean currentState = false;
+                
+                for (ChecklistDataManager.ChecklistItem item : items) {
+                    if (item.getId().equals(itemId)) {
+                        currentState = item.isChecked();
+                        break;
+                    }
+                }
+                
+                // Inverser et sauvegarder l'état
+                dataManager.updateItemCheckedState(checklistId, itemId, !currentState);
+                
+                // Mettre à jour la notification
+                updateNotification(context, notificationId, checklistId);
+                break;
+                
+            case ACTION_COMPLETE_ALL:
+                // Cocher tous les éléments
+                dataManager.setAllItemsCheckedState(checklistId, true);
+                
+                // Mettre à jour la notification
+                updateNotification(context, notificationId, checklistId);
+                break;
+                
+            case ACTION_CLEAR_ALL:
+                // Décocher tous les éléments
+                dataManager.setAllItemsCheckedState(checklistId, false);
+                
+                // Mettre à jour la notification
+                updateNotification(context, notificationId, checklistId);
+                break;
+                
+            case ACTION_CLOSE_NOTIFICATION:
+                // Fermer la notification
+                NotificationManagerCompat.from(context).cancel(notificationId);
+                break;
+        }
+    }
+    
+    /**
+     * Met à jour la notification avec le dernier état des éléments.
+     */
+    private void updateNotification(Context context, int notificationId, String checklistId) {
+        // Cette méthode sera implémentée dans AdvancedNotificationBuilder
+        AdvancedNotificationBuilder.updateChecklistNotification(context, notificationId, checklistId);
     }
 }
