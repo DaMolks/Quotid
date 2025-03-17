@@ -24,6 +24,8 @@ import NotificationFix from '../utils/NotificationFix';
 import AdvancedNotification from '../utils/AdvancedNotification';
 // Import du module de super notifications
 import SuperAdvancedNotification from '../utils/SuperAdvancedNotification';
+// Import du module de notifications style chinois
+import ChineseStyleNotification from '../utils/ChineseStyleNotification';
 
 const SettingsScreen = () => {
   const {theme, isDark, toggleTheme, refreshTheme} = useTheme();
@@ -38,9 +40,9 @@ const SettingsScreen = () => {
   const [notificationsEnabled, setNotificationsEnabled] = useState(hasPermission);
   const [diagnosing, setDiagnosing] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [advancedTesting, setAdvancedTesting] = useState(false);
-  const [superNotificationLoading, setSuperNotificationLoading] = useState(false);
-  const [dailyScheduleLoading, setDailyScheduleLoading] = useState(false);
+  const [gameNotifLoading, setGameNotifLoading] = useState(false);
+  const [fitnessNotifLoading, setFitnessNotifLoading] = useState(false);
+  const [ecommerceNotifLoading, setEcommerceNotifLoading] = useState(false);
   
   // Surveiller le changement d'état des permissions
   useEffect(() => {
@@ -60,82 +62,88 @@ const SettingsScreen = () => {
     }
   };
   
-  // Test de super notification avec tâches ménagères
-  const testSuperAdvancedNotification = async () => {
-    console.log("Test de super notification avancée...");
-    setSuperNotificationLoading(true);
+  // Test de notification de jeu style chinois
+  const testGameNotification = async () => {
+    console.log("Test de notification de jeu style chinois...");
+    setGameNotifLoading(true);
     
     try {
-      const result = await SuperAdvancedNotification.showHousekeepingNotification();
+      const result = await ChineseStyleNotification.showGameNotification();
       
-      console.log("Super notification avancée envoyée, ID:", result.id);
+      console.log("Notification de jeu style chinois envoyée, ID:", result.id);
       
       if (result.id !== -1) {
         Alert.alert(
-          "Notification ultra-riche envoyée",
-          "Une notification interactive de ménage a été envoyée avec une liste de tâches cochables. Vérifiez vos notifications."
+          "Notification de jeu envoyée",
+          "Une notification dans le style des jeux mobiles chinois a été envoyée. Vérifiez vos notifications."
         );
       }
     } catch (error) {
-      console.error("Erreur avec super notification avancée:", error);
+      console.error("Erreur avec notification de jeu style chinois:", error);
       Alert.alert(
         'Erreur',
-        'Impossible d\'envoyer la super notification: ' + 
+        'Impossible d\'envoyer la notification de jeu: ' + 
         (error instanceof Error ? error.message : String(error))
       );
     } finally {
-      setSuperNotificationLoading(false);
+      setGameNotifLoading(false);
     }
   };
   
-  // Test de notification de planning quotidien
-  const testDailyScheduleNotification = async () => {
-    console.log("Test de notification de planning quotidien...");
-    setDailyScheduleLoading(true);
+  // Test de notification de fitness style chinois
+  const testFitnessNotification = async () => {
+    console.log("Test de notification de fitness style chinois...");
+    setFitnessNotifLoading(true);
     
     try {
-      const result = await SuperAdvancedNotification.showDailyScheduleNotification();
+      const result = await ChineseStyleNotification.showFitnessNotification();
       
-      console.log("Notification de planning quotidien envoyée, ID:", result.id);
+      console.log("Notification de fitness style chinois envoyée, ID:", result.id);
       
       if (result.id !== -1) {
         Alert.alert(
-          "Planning quotidien envoyé",
-          "Une notification de planning quotidien a été envoyée avec tâches et événements. Vérifiez vos notifications."
+          "Notification de fitness envoyée",
+          "Une notification dans le style des apps fitness chinoises a été envoyée. Vérifiez vos notifications."
         );
       }
     } catch (error) {
-      console.error("Erreur avec notification de planning quotidien:", error);
+      console.error("Erreur avec notification de fitness style chinois:", error);
       Alert.alert(
         'Erreur',
-        'Impossible d\'envoyer la notification de planning: ' + 
+        'Impossible d\'envoyer la notification de fitness: ' + 
         (error instanceof Error ? error.message : String(error))
       );
     } finally {
-      setDailyScheduleLoading(false);
+      setFitnessNotifLoading(false);
     }
   };
-
-  // Effacer toutes les données
-  const handleClearData = () => {
-    Alert.alert(
-      'Confirmation',
-      'Êtes-vous sûr de vouloir effacer toutes les données ? Cette action est irréversible.',
-      [
-        {text: 'Annuler', style: 'cancel'},
-        {
-          text: 'Effacer',
-          style: 'destructive',
-          onPress: () => {
-            // Cette fonctionnalité sera implémentée ultérieurement
-            Alert.alert(
-              'Information',
-              'Fonctionnalité non disponible pour le moment',
-            );
-          },
-        },
-      ],
-    );
+  
+  // Test de notification e-commerce style chinois
+  const testEcommerceNotification = async () => {
+    console.log("Test de notification e-commerce style chinois...");
+    setEcommerceNotifLoading(true);
+    
+    try {
+      const result = await ChineseStyleNotification.showEcommerceNotification();
+      
+      console.log("Notification e-commerce style chinois envoyée, ID:", result.id);
+      
+      if (result.id !== -1) {
+        Alert.alert(
+          "Notification e-commerce envoyée",
+          "Une notification dans le style des apps e-commerce chinoises a été envoyée. Vérifiez vos notifications."
+        );
+      }
+    } catch (error) {
+      console.error("Erreur avec notification e-commerce style chinois:", error);
+      Alert.alert(
+        'Erreur',
+        'Impossible d\'envoyer la notification e-commerce: ' + 
+        (error instanceof Error ? error.message : String(error))
+      );
+    } finally {
+      setEcommerceNotifLoading(false);
+    }
   };
 
   return (
@@ -166,30 +174,39 @@ const SettingsScreen = () => {
           </View>
         </View>
 
-        {/* Notifications avancées */}
+        {/* Notifications style chinois */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, {color: theme.text}]}>
-            Notifications Avancées
+            Notifications Style Chinois
           </Text>
           
-          {/* Bouton pour notification ultra-riche de tâches ménagères */}
+          {/* En-tête explicatif */}
+          <View style={[styles.infoCard, {backgroundColor: theme.card, borderColor: theme.border}]}>
+            <Icon name="information-outline" size={24} color={theme.primary} />
+            <Text style={[styles.infoText, {color: theme.text}]}>
+              Notifications inspirées des applications chinoises, avec des éléments visuels riches, 
+              des boutons colorés et des incitations à l'action.
+            </Text>
+          </View>
+          
+          {/* Bouton pour notification de jeu */}
           <TouchableOpacity
             style={[
               styles.settingItem,
               {
-                backgroundColor: superNotificationLoading 
+                backgroundColor: gameNotifLoading 
                   ? theme.background 
-                  : theme.primary,
+                  : '#FF5722', // Orange pour le thème jeu
                 borderColor: theme.border
               },
             ]}
-            onPress={testSuperAdvancedNotification}
-            disabled={superNotificationLoading || Platform.OS !== 'android'}>
+            onPress={testGameNotification}
+            disabled={gameNotifLoading || Platform.OS !== 'android'}>
             <View style={styles.settingContent}>
               <Icon 
-                name={superNotificationLoading ? "loading" : "broom"} 
+                name={gameNotifLoading ? "loading" : "gamepad-variant"} 
                 size={24} 
-                color={superNotificationLoading || Platform.OS !== 'android' 
+                color={gameNotifLoading || Platform.OS !== 'android' 
                   ? theme.border 
                   : "#ffffff"} 
               />
@@ -197,43 +214,43 @@ const SettingsScreen = () => {
                 style={[
                   styles.settingTitle, 
                   {
-                    color: superNotificationLoading || Platform.OS !== 'android'
+                    color: gameNotifLoading || Platform.OS !== 'android'
                       ? theme.border 
                       : "#ffffff",
                     fontWeight: 'bold'
                   }
                 ]}
               >
-                {superNotificationLoading 
+                {gameNotifLoading 
                   ? 'Envoi en cours...' 
                   : Platform.OS !== 'android'
-                    ? 'Notif. tâches ménagères (Android)'
-                    : '✨ Notification ultra-riche ménage'}
+                    ? 'Notification Jeu (Android)'
+                    : '🎮 Style Jeu Mobile Chinois'}
               </Text>
             </View>
-            {!superNotificationLoading && Platform.OS === 'android' && (
+            {!gameNotifLoading && Platform.OS === 'android' && (
               <Icon name="chevron-right" size={24} color="#ffffff" />
             )}
           </TouchableOpacity>
           
-          {/* Bouton pour notification de planning quotidien */}
+          {/* Bouton pour notification de fitness */}
           <TouchableOpacity
             style={[
               styles.settingItem,
               {
-                backgroundColor: dailyScheduleLoading 
+                backgroundColor: fitnessNotifLoading 
                   ? theme.background 
-                  : theme.primary,
+                  : '#4CAF50', // Vert pour le thème fitness
                 borderColor: theme.border
               },
             ]}
-            onPress={testDailyScheduleNotification}
-            disabled={dailyScheduleLoading || Platform.OS !== 'android'}>
+            onPress={testFitnessNotification}
+            disabled={fitnessNotifLoading || Platform.OS !== 'android'}>
             <View style={styles.settingContent}>
               <Icon 
-                name={dailyScheduleLoading ? "loading" : "calendar-text"} 
+                name={fitnessNotifLoading ? "loading" : "run"} 
                 size={24} 
-                color={dailyScheduleLoading || Platform.OS !== 'android' 
+                color={fitnessNotifLoading || Platform.OS !== 'android' 
                   ? theme.border 
                   : "#ffffff"} 
               />
@@ -241,21 +258,65 @@ const SettingsScreen = () => {
                 style={[
                   styles.settingTitle, 
                   {
-                    color: dailyScheduleLoading || Platform.OS !== 'android'
+                    color: fitnessNotifLoading || Platform.OS !== 'android'
                       ? theme.border 
                       : "#ffffff",
                     fontWeight: 'bold'
                   }
                 ]}
               >
-                {dailyScheduleLoading 
+                {fitnessNotifLoading 
                   ? 'Envoi en cours...' 
                   : Platform.OS !== 'android'
-                    ? 'Planning journalier (Android)'
-                    : '✨ Planning journalier interactif'}
+                    ? 'Notification Fitness (Android)'
+                    : '🏃 Style App Fitness Chinoise'}
               </Text>
             </View>
-            {!dailyScheduleLoading && Platform.OS === 'android' && (
+            {!fitnessNotifLoading && Platform.OS === 'android' && (
+              <Icon name="chevron-right" size={24} color="#ffffff" />
+            )}
+          </TouchableOpacity>
+          
+          {/* Bouton pour notification e-commerce */}
+          <TouchableOpacity
+            style={[
+              styles.settingItem,
+              {
+                backgroundColor: ecommerceNotifLoading 
+                  ? theme.background 
+                  : '#E91E63', // Rose pour le thème e-commerce
+                borderColor: theme.border
+              },
+            ]}
+            onPress={testEcommerceNotification}
+            disabled={ecommerceNotifLoading || Platform.OS !== 'android'}>
+            <View style={styles.settingContent}>
+              <Icon 
+                name={ecommerceNotifLoading ? "loading" : "shopping"} 
+                size={24} 
+                color={ecommerceNotifLoading || Platform.OS !== 'android' 
+                  ? theme.border 
+                  : "#ffffff"} 
+              />
+              <Text 
+                style={[
+                  styles.settingTitle, 
+                  {
+                    color: ecommerceNotifLoading || Platform.OS !== 'android'
+                      ? theme.border 
+                      : "#ffffff",
+                    fontWeight: 'bold'
+                  }
+                ]}
+              >
+                {ecommerceNotifLoading 
+                  ? 'Envoi en cours...' 
+                  : Platform.OS !== 'android'
+                    ? 'Notification E-commerce (Android)'
+                    : '🛍️ Style E-commerce Chinois'}
+              </Text>
+            </View>
+            {!ecommerceNotifLoading && Platform.OS === 'android' && (
               <Icon name="chevron-right" size={24} color="#ffffff" />
             )}
           </TouchableOpacity>
@@ -340,6 +401,19 @@ const styles = StyleSheet.create({
   },
   versionText: {
     fontSize: 14,
+  },
+  infoCard: {
+    flexDirection: 'row',
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginBottom: 16,
+    alignItems: 'center',
+  },
+  infoText: {
+    fontSize: 14,
+    marginLeft: 12,
+    flex: 1,
   },
 });
 
