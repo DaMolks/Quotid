@@ -45,6 +45,16 @@
               <action android:name="com.htc.intent.action.QUICKBOOT_POWERON"/>
           </intent-filter>
       </receiver>
+      
+      <!-- Notre récepteur personnalisé pour les actions de notification -->
+      <receiver 
+          android:name=".NotificationActionReceiver" 
+          android:exported="true">
+          <intent-filter>
+              <action android:name="com.quotid.TOGGLE_ITEM" />
+              <action android:name="com.quotid.CLOSE_NOTIFICATION" />
+          </intent-filter>
+      </receiver>
 
       <!-- Service de notifications -->
       <service
