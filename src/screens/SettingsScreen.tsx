@@ -16,13 +16,14 @@ import PushNotification from 'react-native-push-notification';
 
 import {useTheme} from '../context/ThemeContext';
 import {useNotification} from '../context/NotificationContext';
-// Import de notre nouveau système de notifications simples
+// Import de notre système de notifications simples comme solution de secours
 import SimpleNotification from '../utils/SimpleNotification';
 
 const SettingsScreen = () => {
   const {theme, isDark, toggleTheme, refreshTheme} = useTheme();
   const {
     scheduleNotification,
+    scheduleInteractiveNotification,
     cancelAllNotifications,
     requestPermissions,
     hasPermission,
@@ -50,35 +51,19 @@ const SettingsScreen = () => {
 
   // Tester les notifications avec toutes les approches possibles
   const testNotifications = () => {
-    console.log("Test de toutes les méthodes de notification possibles...");
+    console.log("Test des notifications de base...");
     
-    // 1. Notifications natives via PushNotification directement
+    // Via notre context de notifications (maintenant approche directe)
     try {
-      console.log("1. Test via PushNotification directement...");
-      PushNotification.localNotification({
-        channelId: 'system-channel',
-        title: '1️⃣ Via Push Directe',
-        message: 'Test des notifications natives directes',
-        importance: "high",
-        priority: "high",
-        vibrate: true,
-        vibration: 300,
-      });
-    } catch (error) {
-      console.error("Erreur avec PushNotification directe:", error);
-    }
-    
-    // 2. Via notre context de notifications
-    try {
-      console.log("2. Test via useNotification context...");
+      console.log("Test via useNotification context...");
       if (hasPermission) {
         const now = new Date();
         now.setSeconds(now.getSeconds() + 2);
         
         scheduleNotification({
-          id: `test-context-${Date.now()}`,
-          title: '2️⃣ Via Context',
-          message: 'Test des notifications via Context',
+          id: `test-std-${Date.now()}`,
+          title: '🔔 Notification Standard',
+          message: 'Ceci est un test de notification standard',
           date: now,
           category: 'system',
         });
@@ -86,31 +71,137 @@ const SettingsScreen = () => {
     } catch (error) {
       console.error("Erreur avec context de notification:", error);
     }
+  };
+  
+  // Tester les notifications interactives
+  const testInteractiveNotifications = () => {
+    console.log("Test des notifications interactives...");
     
-    // 3. Via notre système de notifications simples
-    try {
-      console.log("3. Test via SimpleNotification...");
-      
-      // Affichage immédiat
-      SimpleNotification.showReminder({
-        title: '3️⃣ Via SimpleNotification',
-        message: 'Si vous voyez cette alerte, au moins les alertes fonctionnent!'
+    if (!hasPermission) {
+      requestPermissions().then(granted => {
+        if (granted) {
+          sendInteractiveNotification();
+        } else {
+          Alert.alert(
+            'Permission manquante',
+            'Vous devez autoriser les notifications pour voir cet exemple'
+          );
+        }
       });
-      
-      // Rappel programmé pour 3 secondes plus tard
-      const futureDate = new Date(Date.now() + 3000);
-      SimpleNotification.scheduleReminder({
-        title: '3️⃣ Rappel programmé',
-        message: 'Ce rappel a été programmé pour 3 secondes plus tard',
-        date: futureDate
-      });
-    } catch (error) {
-      console.error("Erreur avec SimpleNotification:", error);
+      return;
     }
     
+    sendInteractiveNotification();
+  };
+  
+  // Fonction pour envoyer une notification interactive
+  const sendInteractiveNotification = () => {
+    // Exemple 1: Notification interactive pour un événement à venir
+    const now = new Date();
+    now.setSeconds(now.getSeconds() + 2); // Dans 2 secondes
+    
+    scheduleInteractiveNotification({
+      id: `interactive-${Date.now()}`,
+      title: '⭐ Exemple: Rappel de réunion',
+      message: 'Réunion d\'équipe dans 15 minutes. Préparer les documents?',
+      date: now,
+      actions: ['Accepter', 'Refuser', 'Plus tard'],
+      category: 'interactive',
+      data: {
+        type: 'meeting',
+        importance: 'high'
+      }
+    });
+    
     Alert.alert(
-      'Tests lancés',
-      'Plusieurs méthodes de notification ont été tentées. Vérifiez les logs pour plus de détails.'
+      'Notification interactive envoyée',
+      'Une notification avec boutons d\'action va apparaître dans 2 secondes'
+    );
+  };
+  
+  // Exemple de notification pour un événement
+  const testEventReminder = () => {
+    console.log("Test de notification pour un événement...");
+    
+    if (!hasPermission) {
+      requestPermissions().then(granted => {
+        if (granted) {
+          sendEventReminder();
+        }
+      });
+      return;
+    }
+    
+    sendEventReminder();
+  };
+  
+  // Fonction pour envoyer une notification de rappel d'événement
+  const sendEventReminder = () => {
+    const now = new Date();
+    now.setSeconds(now.getSeconds() + 2);
+    
+    scheduleNotification({
+      id: `event-reminder-${Date.now()}`,
+      title: '📅 Rappel: Faire le ménage',
+      message: 'N\'oubliez pas de nettoyer l\'appartement aujourd\'hui',
+      date: now,
+      category: 'reminder',
+      actions: ['Terminer', 'Reporter', 'Détails'],
+      data: {
+        eventType: 'housekeeping',
+        priority: 'medium'
+      }
+    });
+    
+    Alert.alert(
+      'Rappel envoyé',
+      'Une notification de rappel d\'événement va apparaître dans 2 secondes'
+    );
+  };
+  
+  // Test de notification personnalisée avec icône et couleur
+  const testCustomNotification = () => {
+    console.log("Test de notification personnalisée...");
+    
+    if (!hasPermission) {
+      requestPermissions().then(granted => {
+        if (granted) {
+          sendCustomNotification();
+        }
+      });
+      return;
+    }
+    
+    sendCustomNotification();
+  };
+  
+  // Fonction pour envoyer une notification personnalisée
+  const sendCustomNotification = () => {
+    const now = new Date();
+    now.setSeconds(now.getSeconds() + 2);
+    
+    // Notification personnalisée avec des données complémentaires
+    scheduleNotification({
+      id: `custom-${Date.now()}`,
+      title: '🌟 Notification Personnalisée',
+      message: 'Cette notification montre comment personnaliser l\'apparence et les comportements',
+      date: now,
+      category: 'system',
+      // Personnalisation supplémentaire
+      autoCancel: true,
+      autoCancelTime: 20, // Disparaît après 20 minutes
+      data: {
+        // Données personnalisées qui peuvent être utilisées dans onNotification
+        screen: 'Stats',
+        customId: 'demo-notification',
+        importance: 'medium',
+        // Vous pouvez ajouter d'autres données pertinentes ici
+      }
+    });
+    
+    Alert.alert(
+      'Notification personnalisée envoyée',
+      'Une notification avec données personnalisées va apparaître dans 2 secondes'
     );
   };
 
@@ -243,7 +334,52 @@ const SettingsScreen = () => {
             <View style={styles.settingContent}>
               <Icon name="bell-check-outline" size={24} color={theme.primary} />
               <Text style={[styles.settingTitle, {color: theme.text}]}>
-                Test multiméthode
+                Notification standard
+              </Text>
+            </View>
+            <Icon name="chevron-right" size={24} color={theme.text} />
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={[
+              styles.settingItem,
+              {backgroundColor: theme.card, borderColor: theme.border},
+            ]}
+            onPress={testInteractiveNotifications}>
+            <View style={styles.settingContent}>
+              <Icon name="bell-plus-outline" size={24} color={theme.primary} />
+              <Text style={[styles.settingTitle, {color: theme.text}]}>
+                Notification interactive
+              </Text>
+            </View>
+            <Icon name="chevron-right" size={24} color={theme.text} />
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={[
+              styles.settingItem,
+              {backgroundColor: theme.card, borderColor: theme.border},
+            ]}
+            onPress={testEventReminder}>
+            <View style={styles.settingContent}>
+              <Icon name="calendar-clock" size={24} color={theme.primary} />
+              <Text style={[styles.settingTitle, {color: theme.text}]}>
+                Rappel d'événement
+              </Text>
+            </View>
+            <Icon name="chevron-right" size={24} color={theme.text} />
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={[
+              styles.settingItem,
+              {backgroundColor: theme.card, borderColor: theme.border},
+            ]}
+            onPress={testCustomNotification}>
+            <View style={styles.settingContent}>
+              <Icon name="bell-badge-outline" size={24} color={theme.primary} />
+              <Text style={[styles.settingTitle, {color: theme.text}]}>
+                Notification personnalisée
               </Text>
             </View>
             <Icon name="chevron-right" size={24} color={theme.text} />
