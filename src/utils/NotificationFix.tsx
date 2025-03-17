@@ -77,9 +77,9 @@ class NotificationFix {
       console.log('- Erreur annulation notifications:', error);
     }
     
-    // 2. Recréer tous les canaux de notification (Android uniquement)
+    // 2. Supprimer et recréer tous les canaux de notification (Android uniquement)
     if (Platform.OS === 'android') {
-      this.recreateAllChannels();
+      this.deleteAllChannels();
     }
     
     // 3. Demander à nouveau les permissions si nécessaire
@@ -132,6 +132,28 @@ class NotificationFix {
     } catch (error) {
       console.log('- Erreur notification directe:', error);
     }
+  }
+  
+  /**
+   * Supprimer tous les canaux existants puis les recréer
+   */
+  static deleteAllChannels() {
+    if (Platform.OS !== 'android') return;
+    
+    console.log('- Suppression de tous les canaux de notification...');
+    
+    PushNotification.getChannels(channels => {
+      channels.forEach(channelId => {
+        console.log(`- Suppression du canal: ${channelId}`);
+        PushNotification.deleteChannel(channelId);
+      });
+      
+      // Après suppression, recréer les canaux
+      setTimeout(() => {
+        console.log('- Canaux supprimés, recréation...');
+        this.recreateAllChannels();
+      }, 1000);
+    });
   }
   
   /**
@@ -210,6 +232,51 @@ class NotificationFix {
     } catch (error) {
       console.log('- Erreur création canaux:', error);
     }
+  }
+  
+  /**
+   * Force un rafraîchissement complet du système de notification
+   * Cette méthode est une solution brutale, mais efficace pour résoudre les problèmes
+   */
+  static forceRefresh() {
+    console.log('=== FORCE REFRESH DU SYSTÈME DE NOTIFICATION ===');
+    
+    // 1. Supprimer tous les canaux
+    if (Platform.OS === 'android') {
+      this.deleteAllChannels();
+    }
+    
+    // 2. Envoyer une notification de test immédiate
+    setTimeout(() => {
+      // Utiliser un canal par défaut au cas où
+      this.forceDirectNotification();
+      
+      // Tester également avec un canal spécifique
+      setTimeout(() => {
+        if (Platform.OS === 'android') {
+          try {
+            PushNotification.localNotification({
+              channelId: 'system-channel',
+              title: '✅ Test Canal Système',
+              message: 'Notification sur le canal système nouvellement créé',
+              importance: "max",
+              priority: "max",
+              smallIcon: "ic_notification",
+              largeIcon: "",
+              vibrate: true,
+              vibration: 300,
+              playSound: true,
+              soundName: 'default',
+            });
+            console.log('- Test sur canal système envoyé');
+          } catch (error) {
+            console.log('- Erreur test canal système:', error);
+          }
+        }
+      }, 2000);
+    }, 2000);
+    
+    return true;
   }
 }
 
