@@ -20,6 +20,8 @@ import {useNotification} from '../context/NotificationContext';
 import SimpleNotification from '../utils/SimpleNotification';
 // Import de l'outil de diagnostic et correctif
 import NotificationFix from '../utils/NotificationFix';
+// Import du module de notifications avancées
+import AdvancedNotification from '../utils/AdvancedNotification';
 
 const SettingsScreen = () => {
   const {theme, isDark, toggleTheme, refreshTheme} = useTheme();
@@ -34,6 +36,7 @@ const SettingsScreen = () => {
   const [notificationsEnabled, setNotificationsEnabled] = useState(hasPermission);
   const [diagnosing, setDiagnosing] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [advancedTesting, setAdvancedTesting] = useState(false);
   
   // Surveiller le changement d'état des permissions
   useEffect(() => {
@@ -204,6 +207,48 @@ const SettingsScreen = () => {
         title: '🌟 Notification Personnalisée (fallback)',
         message: 'Cette notification est envoyée via le système de secours'
       });
+    }
+  };
+  
+  // Test de notification avancée avec liste cochable
+  const testAdvancedNotification = async () => {
+    console.log("Test de notification avancée avec liste cochable...");
+    setAdvancedTesting(true);
+    
+    try {
+      // Exemple de liste de tâches à cocher
+      const items = [
+        { text: "Nettoyer la cuisine", checked: false },
+        { text: "Laver le linge", checked: true },
+        { text: "Faire les courses", checked: false },
+        { text: "Nettoyer la litière des chats", checked: false },
+        { text: "Ranger le salon", checked: true }
+      ];
+      
+      // Afficher la notification avec liste cochable
+      const result = await AdvancedNotification.showChecklistNotification(
+        "📋 Liste de tâches",
+        "Voici vos tâches ménagères du jour",
+        items
+      );
+      
+      console.log("Notification avec liste cochable envoyée, ID:", result.id);
+      
+      // Afficher un message de confirmation
+      Alert.alert(
+        "Notification envoyée",
+        "Une notification avec liste cochable a été envoyée. Vérifiez vos notifications."
+      );
+      
+    } catch (error) {
+      console.error("Erreur avec notification avancée:", error);
+      Alert.alert(
+        'Erreur',
+        'Impossible d\'envoyer la notification avancée: ' + 
+        (error instanceof Error ? error.message : String(error))
+      );
+    } finally {
+      setAdvancedTesting(false);
     }
   };
   
@@ -483,6 +528,40 @@ const SettingsScreen = () => {
               </Text>
             </View>
             <Icon name="chevron-right" size={24} color={theme.text} />
+          </TouchableOpacity>
+          
+          {/* Nouveau bouton pour notification avec liste cochable */}
+          <TouchableOpacity
+            style={[
+              styles.settingItem,
+              {backgroundColor: theme.card, borderColor: theme.border},
+            ]}
+            onPress={testAdvancedNotification}
+            disabled={advancedTesting || Platform.OS !== 'android'}>
+            <View style={styles.settingContent}>
+              <Icon 
+                name="format-list-checks" 
+                size={24} 
+                color={advancedTesting || Platform.OS !== 'android' ? theme.border : theme.primary} 
+              />
+              <Text 
+                style={[
+                  styles.settingTitle, 
+                  {color: advancedTesting || Platform.OS !== 'android' ? theme.border : theme.text}
+                ]}
+              >
+                {advancedTesting 
+                  ? 'Envoi en cours...' 
+                  : Platform.OS !== 'android'
+                    ? 'Liste cochable (Android uniquement)'
+                    : 'Notification avec liste cochable'}
+              </Text>
+            </View>
+            {advancedTesting ? (
+              <Icon name="loading" size={24} color={theme.primary} />
+            ) : (
+              <Icon name="chevron-right" size={24} color={Platform.OS !== 'android' ? theme.border : theme.text} />
+            )}
           </TouchableOpacity>
           
           {/* Nouvel élément: Diagnostic */}
