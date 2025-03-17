@@ -119,6 +119,18 @@ const CalendarScreen = () => {
     navigation.navigate('CreateEvent', {date: selectedDate});
   };
 
+  // Fonction de rendu personnalisée pour l'en-tête du calendrier
+  const renderCustomHeader = (date: any) => {
+    const headerDate = new Date(date);
+    const monthYear = `${getMonthName(headerDate)} ${headerDate.getFullYear()}`;
+    
+    return (
+      <Text style={{fontSize: 16, fontWeight: 'bold', color: theme.text}}>
+        {monthYear}
+      </Text>
+    );
+  };
+
   // Rendu d'un élément de la liste des événements
   const renderEventItem = ({item}: {item: Event}) => {
     const startTime = new Date(item.startTime).toLocaleTimeString([], {
@@ -174,17 +186,8 @@ const CalendarScreen = () => {
     );
   }
 
-  // Format personnalisé: "Mars 2025"
-  const monthYearTitle = `${getMonthName(currentMonth)} ${currentMonth.getFullYear()}`;
-
   return (
     <View style={[styles.container, {backgroundColor: theme.background}]}>
-      <View style={styles.calendarHeaderContainer}>
-        <Text style={[styles.monthYearTitle, {color: theme.text}]}>
-          {monthYearTitle}
-        </Text>
-      </View>
-      
       <Calendar
         theme={{
           calendarBackground: theme.card,
@@ -209,9 +212,8 @@ const CalendarScreen = () => {
         enableSwipeMonths={true}
         hideExtraDays={false}
         hideDayNames={false}
-        // Cacher l'en-tête du mois par défaut et utiliser notre propre en-tête
-        hideArrows={false}
-        renderHeader={() => null}
+        // Utiliser notre fonction de rendu personnalisée pour l'en-tête
+        customHeader={renderCustomHeader}
         disableMonthChange={false}
       />
 
@@ -257,16 +259,6 @@ const CalendarScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  calendarHeaderContainer: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  monthYearTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
   },
   eventsContainer: {
     flex: 1,
