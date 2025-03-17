@@ -7,7 +7,7 @@ import {
   FlatList,
   ActivityIndicator,
 } from 'react-native';
-import {Calendar, DateData} from 'react-native-calendars';
+import {Calendar, DateData, LocaleConfig} from 'react-native-calendars';
 import {useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -15,9 +15,53 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {useTheme} from '../context/ThemeContext';
 import {useDatabase} from '../context/DatabaseContext';
 import {RootStackParamList} from '../navigation/AppNavigator';
-import {formatDate, parseDate} from '../utils/dateUtils';
+import {formatDate, parseDate, getMonthName} from '../utils/dateUtils';
 import {Event} from '../models/Event';
 import {getEventsForDate} from '../services/eventService';
+
+// Configuration des locales pour le calendrier
+LocaleConfig.locales['fr'] = {
+  monthNames: [
+    'Janvier',
+    'Février',
+    'Mars',
+    'Avril',
+    'Mai',
+    'Juin',
+    'Juillet',
+    'Août',
+    'Septembre',
+    'Octobre',
+    'Novembre',
+    'Décembre',
+  ],
+  monthNamesShort: [
+    'Janv.',
+    'Févr.',
+    'Mars',
+    'Avril',
+    'Mai',
+    'Juin',
+    'Juil.',
+    'Août',
+    'Sept.',
+    'Oct.',
+    'Nov.',
+    'Déc.',
+  ],
+  dayNames: [
+    'Dimanche',
+    'Lundi',
+    'Mardi',
+    'Mercredi',
+    'Jeudi',
+    'Vendredi',
+    'Samedi',
+  ],
+  dayNamesShort: ['Dim.', 'Lun.', 'Mar.', 'Mer.', 'Jeu.', 'Ven.', 'Sam.'],
+  today: "Aujourd'hui",
+};
+LocaleConfig.defaultLocale = 'fr';
 
 type CalendarScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -33,6 +77,7 @@ const CalendarScreen = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [markedDates, setMarkedDates] = useState({});
   const [isLoadingEvents, setIsLoadingEvents] = useState(false);
+  const [currentMonth, setCurrentMonth] = useState(new Date());
 
   // Charger les événements pour la date sélectionnée
   useEffect(() => {
@@ -54,12 +99,14 @@ const CalendarScreen = () => {
     loadEvents();
   }, [database, selectedDate]);
 
-  // Fonction pour mettre à jour les dates marquées dans le calendrier
-  // (Cette fonction sera implémentée plus tard pour montrer les jours avec des événements)
-
   // Gestionnaire de changement de date
   const handleDayPress = (day: DateData) => {
     setSelectedDate(day.dateString);
+  };
+
+  // Gestionnaire de changement de mois
+  const handleMonthChange = (month: DateData) => {
+    setCurrentMonth(new Date(month.timestamp));
   };
 
   // Naviguer vers l'écran de détail d'un événement
@@ -127,8 +174,17 @@ const CalendarScreen = () => {
     );
   }
 
+  // Format personnalisé: "Mars 2025"
+  const monthYearTitle = `${getMonthName(currentMonth)} ${currentMonth.getFullYear()}`;
+
   return (
     <View style={[styles.container, {backgroundColor: theme.background}]}>
+      <View style={styles.calendarHeaderContainer}>
+        <Text style={[styles.monthYearTitle, {color: theme.text}]}>
+          {monthYearTitle}
+        </Text>
+      </View>
+      
       <Calendar
         theme={{
           calendarBackground: theme.card,
@@ -145,11 +201,18 @@ const CalendarScreen = () => {
           indicatorColor: theme.primary,
         }}
         onDayPress={handleDayPress}
+        onMonthChange={handleMonthChange}
         markedDates={{
           ...markedDates,
           [selectedDate]: {selected: true, selectedColor: theme.primary},
         }}
         enableSwipeMonths={true}
+        hideExtraDays={false}
+        hideDayNames={false}
+        // Cacher l'en-tête du mois par défaut et utiliser notre propre en-tête
+        hideArrows={false}
+        renderHeader={() => null}
+        disableMonthChange={false}
       />
 
       <View style={styles.eventsContainer}>
@@ -194,6 +257,16 @@ const CalendarScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  calendarHeaderContainer: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  monthYearTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
   },
   eventsContainer: {
     flex: 1,
