@@ -16,9 +16,9 @@ const App = () => {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
-        {/* Configuration de la barre d'état avec une couleur fixe */}
+        {/* Configuration de la barre d'état avec une couleur très sombre */}
         <StatusBar 
-          backgroundColor="#2D2A26" // Couleur de fond de la barre d'état - marron foncé
+          backgroundColor="#121212" // Couleur presque noire pour la barre d'état
           barStyle="light-content" // Style du texte et des icônes (light-content = blanc)
           translucent={false} // Pas translucide pour une séparation nette
         />
