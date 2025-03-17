@@ -1,28 +1,8 @@
 import React, {createContext, useState, useEffect, useContext, ReactNode} from 'react';
-import PushNotification from 'react-native-push-notification';
-// Importation conditionnelle pour éviter les problèmes
-let PushNotificationIOS: any;
-try {
-  PushNotificationIOS = require('@react-native-community/push-notification-ios');
-} catch (error) {
-  console.log('PushNotificationIOS could not be imported', error);
-  // Fallback ou placeholder pour PushNotificationIOS
-  PushNotificationIOS = {
-    FetchResult: {
-      NoData: 'NoData',
-      NewData: 'NewData',
-      Failed: 'Failed',
-    },
-  };
-}
+import {Platform, PermissionsAndroid, Alert} from 'react-native';
+import PushNotification, {Importance} from 'react-native-push-notification';
 
-interface NotificationContextType {
-  scheduleNotification: (options: ScheduleOptions) => void;
-  cancelNotification: (id: string) => void;
-  cancelAllNotifications: () => void;
-  requestPermissions: () => void;
-}
-
+// Structure pour les options de notification planifiée
 interface ScheduleOptions {
   id: string;
   title: string;
@@ -34,10 +14,21 @@ interface ScheduleOptions {
   autoCancelTime?: number; // Temps en minutes après lequel la notification disparaît automatiquement
 }
 
+// Interface pour le contexte de notification
+interface NotificationContextType {
+  scheduleNotification: (options: ScheduleOptions) => void;
+  cancelNotification: (id: string) => void;
+  cancelAllNotifications: () => void;
+  requestPermissions: () => Promise<boolean>;
+  hasPermission: boolean;
+}
+
+// Création du contexte avec une valeur par défaut undefined
 const NotificationContext = createContext<NotificationContextType | undefined>(
   undefined,
 );
 
+// Hook pour utiliser le contexte de notification
 export const useNotification = () => {
   const context = useContext(NotificationContext);
   if (context === undefined) {
@@ -48,117 +39,238 @@ export const useNotification = () => {
   return context;
 };
 
+// Props pour le provider
 interface NotificationProviderProps {
   children: ReactNode;
 }
 
+// Composant Provider
 export const NotificationProvider = ({children}: NotificationProviderProps) => {
-  // Timer IDs pour l'auto-annulation des notifications
+  // États
+  const [hasPermission, setHasPermission] = useState(false);
   const [timers, setTimers] = useState<{[key: string]: NodeJS.Timeout}>({});
-  const [isConfigured, setIsConfigured] = useState(false);
+  const [channelsCreated, setChannelsCreated] = useState(false);
 
-  useEffect(() => {
-    try {
-      // Configuration des notifications
-      PushNotification.configure({
-        onRegister: function (token) {
-          console.log('TOKEN:', token);
-        },
-        onNotification: function (notification) {
-          console.log('NOTIFICATION:', notification);
-          if (notification.finish) {
-            // Uniquement appeler finish si la méthode existe
-            notification.finish(PushNotificationIOS.FetchResult.NoData);
-          }
-        },
-        permissions: {
-          alert: true,
-          badge: true,
-          sound: true,
-        },
-        popInitialNotification: true,
-        requestPermissions: false, // Nous demanderons les permissions manuellement
-      });
-
-      // Création des canaux de notification (Android)
+  // Création des canaux de notification (Android uniquement)
+  const createNotificationChannels = () => {
+    if (Platform.OS === 'android') {
+      // Canal principal pour les événements réguliers
       PushNotification.createChannel(
         {
-          channelId: 'default-channel',
-          channelName: 'Default Channel',
-          channelDescription: 'A default channel for notifications',
+          channelId: 'events-channel',
+          channelName: 'Événements',
+          channelDescription: 'Notifications pour les événements du calendrier',
           soundName: 'default',
-          importance: 4, // Importance max
+          importance: Importance.HIGH,
           vibrate: true,
         },
         (created) => {
-          console.log(`Channel created: ${created}`);
-          setIsConfigured(true);
+          console.log(`Canal d'événements créé: ${created}`);
         },
       );
-    } catch (error) {
-      console.error('Error configuring notifications:', error);
-      // En cas d'erreur, nous utiliserons des notifications factices
-      setIsConfigured(false);
-    }
 
-    // Nettoyer les timers lors du démontage
+      // Canal pour les rappels d'événements importants
+      PushNotification.createChannel(
+        {
+          channelId: 'reminders-channel',
+          channelName: 'Rappels',
+          channelDescription: 'Rappels pour les événements importants',
+          soundName: 'default',
+          importance: Importance.MAX,
+          vibrate: true,
+        },
+        (created) => {
+          console.log(`Canal de rappels créé: ${created}`);
+        },
+      );
+
+      // Canal pour les notifications système
+      PushNotification.createChannel(
+        {
+          channelId: 'system-channel',
+          channelName: 'Système',
+          channelDescription: 'Notifications système de l\'application',
+          soundName: 'default',
+          importance: Importance.DEFAULT,
+          vibrate: false,
+        },
+        (created) => {
+          console.log(`Canal système créé: ${created}`);
+          setChannelsCreated(true);
+        },
+      );
+    } else {
+      // Sur iOS, pas besoin de canaux
+      setChannelsCreated(true);
+    }
+  };
+
+  // Configuration initiale des notifications
+  useEffect(() => {
+    // Configuration générale des notifications
+    PushNotification.configure({
+      // (required) Called when a remote or local notification is opened or received
+      onNotification: function (notification) {
+        console.log('NOTIFICATION:', notification);
+        
+        // Traitement spécifique selon le type de notification
+        if (notification.userInfo && notification.userInfo.category) {
+          // Logique spécifique à la catégorie...
+        }
+        
+        // iOS requirement
+        if (Platform.OS === 'ios' && notification.finish) {
+          notification.finish('backgroundFetchResultNoData');
+        }
+      },
+
+      // Permissions iOS (Android utilise PermissionsAndroid)
+      permissions: {
+        alert: true,
+        badge: true,
+        sound: true,
+      },
+
+      // Ne pas demander les permissions automatiquement
+      requestPermissions: false,
+      
+      // Afficher la notification initiale si l'application est lancée par une notification
+      popInitialNotification: true,
+    });
+
+    // Créer les canaux de notification
+    createNotificationChannels();
+
+    // Vérifier l'état des permissions
+    checkPermissions();
+
+    // Nettoyer les ressources à la désinscription
     return () => {
+      // Nettoyer tous les timers
       Object.values(timers).forEach(timer => clearTimeout(timer));
     };
   }, []);
 
-  // Fonction pour demander les permissions
-  const requestPermissions = () => {
-    try {
-      if (isConfigured) {
-        PushNotification.requestPermissions();
-      } else {
-        // Utiliser une alerte pour simuler la demande de permission
-        alert('Simulation de demande de permission pour les notifications');
+  // Vérifier si l'application a les permissions de notification
+  const checkPermissions = async () => {
+    if (Platform.OS === 'android') {
+      try {
+        const granted = await PermissionsAndroid.check(
+          PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
+        );
+        console.log('Android notification permission:', granted);
+        setHasPermission(granted);
+        return granted;
+      } catch (err) {
+        console.warn('Failed to check notification permission:', err);
+        setHasPermission(false);
+        return false;
       }
+    } else {
+      // Sur iOS, c'est plus complexe à vérifier, nous supposons que l'utilisateur a accordé les permissions
+      setHasPermission(true);
+      return true;
+    }
+  };
+
+  // Demander les permissions de notification
+  const requestPermissions = async () => {
+    try {
+      if (Platform.OS === 'android') {
+        if (Platform.Version >= 33) { // Android 13 (API 33) et plus
+          const granted = await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
+            {
+              title: 'Permissions de notification',
+              message: 'Quotid a besoin d\'envoyer des notifications pour vous rappeler vos événements',
+              buttonNeutral: 'Demander plus tard',
+              buttonNegative: 'Annuler',
+              buttonPositive: 'OK',
+            },
+          );
+          const permissionGranted = granted === PermissionsAndroid.RESULTS.GRANTED;
+          setHasPermission(permissionGranted);
+          return permissionGranted;
+        } else {
+          // Pour les anciennes versions d'Android, les permissions ne sont pas nécessaires
+          setHasPermission(true);
+          return true;
+        }
+      } else if (Platform.OS === 'ios') {
+        // Pour iOS, utiliser la méthode de react-native-push-notification
+        const permission = await PushNotification.requestPermissions();
+        const permissionGranted = permission?.alert || false;
+        setHasPermission(permissionGranted);
+        return permissionGranted;
+      }
+      return false;
     } catch (error) {
       console.error('Error requesting permissions:', error);
-      alert('Impossible de demander les permissions de notification');
+      Alert.alert(
+        'Erreur',
+        'Impossible de demander les permissions de notification. Veuillez les activer manuellement dans les paramètres.',
+      );
+      return false;
     }
   };
 
   // Planifier une notification
-  const scheduleNotification = ({id, title, message, date, category = 'default', data = {}, autoCancel = true, autoCancelTime = 30}: ScheduleOptions) => {
+  const scheduleNotification = ({
+    id,
+    title,
+    message,
+    date,
+    category = 'default',
+    data = {},
+    autoCancel = true,
+    autoCancelTime = 30,
+  }: ScheduleOptions) => {
+    // Vérifier si les permissions sont accordées
+    if (!hasPermission) {
+      console.warn('Notification permissions not granted');
+      Alert.alert(
+        'Permissions requises',
+        'Les notifications ne peuvent pas être programmées sans votre autorisation.',
+        [
+          {
+            text: 'Annuler',
+            style: 'cancel',
+          },
+          {
+            text: 'Autoriser',
+            onPress: requestPermissions,
+          },
+        ],
+      );
+      return;
+    }
+
     // Annuler toute notification existante avec le même ID
     cancelNotification(id);
-    
-    try {
-      if (isConfigured) {
-        // Vraie notification
-        PushNotification.localNotificationSchedule({
-          id,
-          title,
-          message,
-          date,
-          channelId: 'default-channel',
-          soundName: 'default',
-          userInfo: {
-            ...data,
-            category,
-          },
-          allowWhileIdle: true,
-        });
-      } else {
-        // Notification factice (alerte)
-        const timeUntilNotification = date.getTime() - Date.now();
-        if (timeUntilNotification > 0) {
-          setTimeout(() => {
-            alert(`[NOTIFICATION]\nTitre: ${title}\nMessage: ${message}`);
-          }, timeUntilNotification);
-        } else {
-          alert(`[NOTIFICATION]\nTitre: ${title}\nMessage: ${message}`);
-        }
-      }
-    } catch (error) {
-      console.error('Error scheduling notification:', error);
-      // Fallback à une alerte simple
-      alert(`Erreur lors de la programmation de la notification. Détails: ${title} - ${message}`);
+
+    // Déterminer le canal à utiliser (Android uniquement)
+    let channelId = 'events-channel';
+    if (category === 'reminder') {
+      channelId = 'reminders-channel';
+    } else if (category === 'system') {
+      channelId = 'system-channel';
     }
+
+    // Planifier la notification
+    PushNotification.localNotificationSchedule({
+      id: id,
+      channelId: channelId,
+      title: title,
+      message: message,
+      date: date,
+      allowWhileIdle: true, // Fonctionnera même si l'appareil est en mode économie d'énergie
+      userInfo: {
+        category: category,
+        ...data,
+      },
+    });
+
+    console.log(`Notification programmée: ${id} - ${title} - ${date.toLocaleString()}`);
 
     // Si autoCancel est activé, planifier l'annulation automatique
     if (autoCancel) {
@@ -195,14 +307,9 @@ export const NotificationProvider = ({children}: NotificationProviderProps) => {
 
   // Annuler une notification spécifique
   const cancelNotification = (id: string) => {
-    try {
-      if (isConfigured) {
-        PushNotification.cancelLocalNotification(id);
-      }
-    } catch (error) {
-      console.error('Error canceling notification:', error);
-    }
-    
+    PushNotification.cancelLocalNotification(id);
+    console.log(`Notification annulée: ${id}`);
+
     // Nettoyer le timer associé s'il existe
     if (timers[id]) {
       clearTimeout(timers[id]);
@@ -216,19 +323,15 @@ export const NotificationProvider = ({children}: NotificationProviderProps) => {
 
   // Annuler toutes les notifications
   const cancelAllNotifications = () => {
-    try {
-      if (isConfigured) {
-        PushNotification.cancelAllLocalNotifications();
-      }
-    } catch (error) {
-      console.error('Error canceling all notifications:', error);
-    }
-    
+    PushNotification.cancelAllLocalNotifications();
+    console.log('Toutes les notifications ont été annulées');
+
     // Nettoyer tous les timers
     Object.values(timers).forEach(timer => clearTimeout(timer));
     setTimers({});
   };
 
+  // Fournir le contexte aux composants enfants
   return (
     <NotificationContext.Provider
       value={{
@@ -236,6 +339,7 @@ export const NotificationProvider = ({children}: NotificationProviderProps) => {
         cancelNotification,
         cancelAllNotifications,
         requestPermissions,
+        hasPermission,
       }}>
       {children}
     </NotificationContext.Provider>
