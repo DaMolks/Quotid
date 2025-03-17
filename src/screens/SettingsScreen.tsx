@@ -16,7 +16,7 @@ import {useTheme} from '../context/ThemeContext';
 import {useNotification} from '../context/NotificationContext';
 
 const SettingsScreen = () => {
-  const {theme, isDark, toggleTheme} = useTheme();
+  const {theme, isDark, toggleTheme, refreshTheme} = useTheme();
   const {cancelAllNotifications, requestPermissions} = useNotification();
 
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
@@ -82,6 +82,28 @@ const SettingsScreen = () => {
               thumbColor="#f4f3f4"
             />
           </View>
+          
+          {/* Option de rafraîchissement du thème */}
+          <TouchableOpacity
+            style={[
+              styles.settingItem,
+              {backgroundColor: theme.card, borderColor: theme.border},
+            ]}
+            onPress={() => {
+              refreshTheme();
+              Alert.alert(
+                'Thème actualisé',
+                'Le thème a été rafraîchi avec les dernières couleurs.'
+              );
+            }}>
+            <View style={styles.settingContent}>
+              <Icon name="refresh" size={24} color={theme.primary} />
+              <Text style={[styles.settingTitle, {color: theme.text}]}>
+                Rafraîchir le thème
+              </Text>
+            </View>
+            <Icon name="chevron-right" size={24} color={theme.text} />
+          </TouchableOpacity>
         </View>
 
         {/* Notifications */}
