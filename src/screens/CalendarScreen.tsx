@@ -77,7 +77,6 @@ const CalendarScreen = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [markedDates, setMarkedDates] = useState({});
   const [isLoadingEvents, setIsLoadingEvents] = useState(false);
-  const [currentMonth, setCurrentMonth] = useState(new Date());
 
   // Charger les événements pour la date sélectionnée
   useEffect(() => {
@@ -104,11 +103,6 @@ const CalendarScreen = () => {
     setSelectedDate(day.dateString);
   };
 
-  // Gestionnaire de changement de mois
-  const handleMonthChange = (month: DateData) => {
-    setCurrentMonth(new Date(month.timestamp));
-  };
-
   // Naviguer vers l'écran de détail d'un événement
   const navigateToEventDetail = (eventId: number) => {
     navigation.navigate('EventDetail', {eventId});
@@ -117,18 +111,6 @@ const CalendarScreen = () => {
   // Naviguer vers l'écran de création d'événement
   const navigateToCreateEvent = () => {
     navigation.navigate('CreateEvent', {date: selectedDate});
-  };
-
-  // Fonction de rendu personnalisée pour l'en-tête du calendrier
-  const renderCustomHeader = (date: any) => {
-    const headerDate = new Date(date);
-    const monthYear = `${getMonthName(headerDate)} ${headerDate.getFullYear()}`;
-    
-    return (
-      <Text style={{fontSize: 16, fontWeight: 'bold', color: theme.text}}>
-        {monthYear}
-      </Text>
-    );
   };
 
   // Rendu d'un élément de la liste des événements
@@ -204,17 +186,13 @@ const CalendarScreen = () => {
           indicatorColor: theme.primary,
         }}
         onDayPress={handleDayPress}
-        onMonthChange={handleMonthChange}
         markedDates={{
           ...markedDates,
           [selectedDate]: {selected: true, selectedColor: theme.primary},
         }}
         enableSwipeMonths={true}
-        hideExtraDays={false}
-        hideDayNames={false}
-        // Utiliser notre fonction de rendu personnalisée pour l'en-tête
-        customHeader={renderCustomHeader}
-        disableMonthChange={false}
+        // Utilisation de l'option monthFormat pour simplifier le formatage
+        monthFormat={'MMMM yyyy'}
       />
 
       <View style={styles.eventsContainer}>
