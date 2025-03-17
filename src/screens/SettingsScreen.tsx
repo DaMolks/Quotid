@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   Switch,
   Alert,
   Linking,
+  Platform,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -17,21 +18,84 @@ import {useNotification} from '../context/NotificationContext';
 
 const SettingsScreen = () => {
   const {theme, isDark, toggleTheme, refreshTheme} = useTheme();
-  const {cancelAllNotifications, requestPermissions} = useNotification();
+  const {
+    scheduleNotification,
+    cancelAllNotifications,
+    requestPermissions,
+    hasPermission,
+  } = useNotification();
 
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(hasPermission);
+  
+  // Surveiller le changement d'état des permissions
+  useEffect(() => {
+    setNotificationsEnabled(hasPermission);
+  }, [hasPermission]);
 
   // Activer/désactiver les notifications
-  const handleNotificationsToggle = (value: boolean) => {
+  const handleNotificationsToggle = async (value: boolean) => {
     if (value) {
       // Si on active les notifications, demander les permissions
-      requestPermissions();
+      const granted = await requestPermissions();
+      setNotificationsEnabled(granted);
     } else {
       // Si les notifications sont désactivées, annuler toutes les notifications existantes
       cancelAllNotifications();
+      setNotificationsEnabled(false);
+    }
+  };
+
+  // Tester une notification immédiate
+  const testNotification = () => {
+    if (!hasPermission) {
+      Alert.alert(
+        'Permission requise',
+        'Veuillez activer les notifications pour tester cette fonctionnalité.',
+        [
+          {
+            text: 'Annuler',
+            style: 'cancel',
+          },
+          {
+            text: 'Activer',
+            onPress: async () => {
+              const granted = await requestPermissions();
+              if (granted) {
+                sendTestNotification();
+              }
+            },
+          },
+        ],
+      );
+      return;
     }
     
-    setNotificationsEnabled(value);
+    sendTestNotification();
+  };
+  
+  // Envoyer une notification de test
+  const sendTestNotification = () => {
+    const now = new Date();
+    now.setSeconds(now.getSeconds() + 5); // 5 secondes à partir de maintenant
+    
+    scheduleNotification({
+      id: 'test-notification',
+      title: 'Notification de test',
+      message: 'Cette notification confirme que tout fonctionne correctement !',
+      date: now,
+      category: 'system',
+      data: {
+        type: 'test',
+        screen: 'Settings',
+      },
+      autoCancel: true,
+      autoCancelTime: 1, // Disparaît après 1 minute
+    });
+    
+    Alert.alert(
+      'Notification programmée',
+      'Une notification de test apparaîtra dans 5 secondes.',
+    );
   };
 
   // Effacer toutes les données
@@ -54,6 +118,15 @@ const SettingsScreen = () => {
         },
       ],
     );
+  };
+
+  // Ouvrir les paramètres de notification du système
+  const openNotificationSettings = () => {
+    if (Platform.OS === 'android') {
+      Linking.openSettings();
+    } else {
+      Linking.openURL('app-settings:');
+    }
   };
 
   return (
@@ -143,6 +216,36 @@ const SettingsScreen = () => {
               </Text>
             </View>
             <Icon name="chevron-right" size={24} color={theme.text} />
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={[
+              styles.settingItem,
+              {backgroundColor: theme.card, borderColor: theme.border},
+            ]}
+            onPress={testNotification}>
+            <View style={styles.settingContent}>
+              <Icon name="bell-check-outline" size={24} color={theme.primary} />
+              <Text style={[styles.settingTitle, {color: theme.text}]}>
+                Tester les notifications
+              </Text>
+            </View>
+            <Icon name="chevron-right" size={24} color={theme.text} />
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={[
+              styles.settingItem,
+              {backgroundColor: theme.card, borderColor: theme.border},
+            ]}
+            onPress={openNotificationSettings}>
+            <View style={styles.settingContent}>
+              <Icon name="cog-outline" size={24} color={theme.primary} />
+              <Text style={[styles.settingTitle, {color: theme.text}]}>
+                Paramètres système
+              </Text>
+            </View>
+            <Icon name="open-in-new" size={24} color={theme.text} />
           </TouchableOpacity>
         </View>
 
