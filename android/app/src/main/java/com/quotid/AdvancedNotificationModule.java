@@ -97,7 +97,7 @@ public class AdvancedNotificationModule extends ReactContextBaseJavaModule {
             
             // Créer le constructeur de notification
             NotificationCompat.Builder builder = new NotificationCompat.Builder(reactContext, CHECKLIST_CHANNEL_ID)
-                    .setSmallIcon(R.drawable.ic_notification)
+                    .setSmallIcon(android.R.drawable.ic_dialog_info) // Utiliser une icône standard Android
                     .setContentTitle(title)
                     .setContentText(content)
                     .setPriority(NotificationCompat.PRIORITY_HIGH)
