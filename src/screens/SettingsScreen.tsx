@@ -33,6 +33,7 @@ const SettingsScreen = () => {
 
   const [notificationsEnabled, setNotificationsEnabled] = useState(hasPermission);
   const [diagnosing, setDiagnosing] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   
   // Surveiller le changement d'état des permissions
   useEffect(() => {
@@ -246,6 +247,43 @@ const SettingsScreen = () => {
       setDiagnosing(false);
     }
   };
+  
+  // Forcer le rafraîchissement complet des canaux de notification
+  const forceChannelRefresh = () => {
+    setRefreshing(true);
+    
+    try {
+      // Exécuter la suppression et recréation des canaux
+      Alert.alert(
+        'Rafraîchissement des canaux',
+        'Tous les canaux de notification vont être supprimés puis recréés. Cette opération peut prendre quelques secondes.',
+        [
+          {
+            text: 'Annuler',
+            style: 'cancel',
+            onPress: () => setRefreshing(false)
+          },
+          {
+            text: 'Continuer',
+            onPress: async () => {
+              NotificationFix.forceRefresh();
+              setTimeout(() => {
+                setRefreshing(false);
+                Alert.alert(
+                  'Rafraîchissement terminé',
+                  'Les canaux de notification ont été recréés. Des notifications de test ont été envoyées pour vérifier le bon fonctionnement. Vérifiez si vous les recevez.'
+                );
+              }, 5000);
+            }
+          }
+        ]
+      );
+    } catch (error) {
+      console.error("Erreur lors du rafraîchissement des canaux:", error);
+      Alert.alert('Erreur', 'Une erreur est survenue lors du rafraîchissement des canaux');
+      setRefreshing(false);
+    }
+  };
 
   // Effacer toutes les données
   const handleClearData = () => {
@@ -446,6 +484,29 @@ const SettingsScreen = () => {
             ) : (
               <Icon name="chevron-right" size={24} color={theme.text} />
             )}
+          </TouchableOpacity>
+          
+          {/* Nouvel élément: Rafraîchir canaux */}
+          <TouchableOpacity
+            style={[
+              styles.settingItem,
+              {
+                backgroundColor: refreshing ? theme.background : theme.danger,
+                borderColor: theme.border
+              },
+            ]}
+            onPress={forceChannelRefresh}
+            disabled={refreshing}>
+            <View style={styles.settingContent}>
+              <Icon 
+                name={refreshing ? "loading" : "restart"} 
+                size={24} 
+                color={refreshing ? theme.border : "#ffffff"} 
+              />
+              <Text style={[styles.settingTitle, {color: refreshing ? theme.border : "#ffffff"}]}>
+                {refreshing ? 'Rafraîchissement en cours...' : 'Réinitialiser tous les canaux'}
+              </Text>
+            </View>
           </TouchableOpacity>
           
           <TouchableOpacity
