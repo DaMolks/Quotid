@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="8dp"
+    android:background="#3498db">
+
+    <!-- Titre et icône -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="4dp">
+
+        <ImageView
+            android:id="@+id/notification_icon"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:src="@android:drawable/ic_menu_agenda"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:contentDescription="Icône de liste"
+            android:tint="#FFFFFF" />
+
+        <TextView
+            android:id="@+id/notification_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_toEndOf="@id/notification_icon"
+            android:layout_marginStart="8dp"
+            android:text="Titre de la notification"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF" />
+
+        <TextView
+            android:id="@+id/notification_subtitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_toEndOf="@id/notification_icon"
+            android:layout_below="@id/notification_title"
+            android:layout_marginStart="8dp"
+            android:text="Sous-titre"
+            android:textSize="14sp"
+            android:textColor="#EEEEEE" />
+
+    </RelativeLayout>
+
+    <!-- Séparateur -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#FFFFFF"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="8dp"/>
+
+    <!-- Liste des éléments à cocher (générée dynamiquement) -->
+    <LinearLayout
+        android:id="@+id/checklist_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+        
+        <!-- Les items seront ajoutés ici dynamiquement -->
+        
+    </LinearLayout>
+
+    <!-- Boutons d'action -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp">
+
+        <Button
+            android:id="@+id/btn_complete_all"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:text="Tout cocher"
+            android:textSize="12sp"
+            android:textColor="#FFFFFF"
+            android:background="#27ae60"
+            android:layout_marginEnd="4dp" />
+
+        <Button
+            android:id="@+id/btn_clear_all"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:text="Tout décocher"
+            android:textSize="12sp"
+            android:textColor="#FFFFFF"
+            android:background="#e74c3c"
+            android:layout_marginStart="4dp" />
+
+    </LinearLayout>
+
+</LinearLayout>
