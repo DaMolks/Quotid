@@ -2,68 +2,68 @@ import React, {createContext, useState, useContext, ReactNode, useEffect} from '
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Version du thème - incrémentez cette valeur à chaque changement majeur de couleurs
-const THEME_VERSION = '1.0.0';
+const THEME_VERSION = '1.1.0';
 const THEME_VERSION_KEY = 'theme_version';
 
-// Définition des couleurs du thème - Nouvelle palette vibrante et rigoureuse
+// Définition des couleurs du thème - Nouvelle palette basée sur vert et marron
 const lightTheme = {
-  // Couleur principale - Bleu plus vif avec une touche de violet pour énergie et confiance
-  primary: '#4361EE', // Bleu électrique - dynamique et énergique
-  secondary: '#3A0CA3', // Violet profond - apporte une touche de créativité
+  // Couleurs principales
+  primary: '#4A7C59', // Vert forêt - équilibre et rigueur
+  secondary: '#8C5E58', // Marron chaud - chaleur et stabilité
   
   // Couleurs de fond
-  background: '#FFFFFF',
-  card: '#F8F9FA',
+  background: '#F6F4F1', // Crème légèrement grisé - plus sombre que blanc pur
+  card: '#ECE9E4', // Beige clair - texture et chaleur
   
   // Couleurs de texte et bordures
-  text: '#2B2D42', // Bleu très foncé presque noir - professionnalisme et lisibilité
-  border: '#D9D9D9',
+  text: '#2D2A26', // Marron très foncé - professionnel et naturel
+  border: '#D8D2CB', // Beige moyen - doux et chaleureux
   
   // Couleurs de notification et d'état
-  notification: '#F72585', // Rose fuchsia - attire l'attention immédiatement
-  success: '#4CC9F0', // Cyan vif - frais et positif
-  warning: '#F8961E', // Orange vif - chaleureux mais alerte
-  info: '#4895EF', // Bleu ciel - informatif et apaisant
-  danger: '#F72585', // Rose fuchsia - identique à notification pour cohérence
+  notification: '#DB504A', // Rouge terre cuite - chaleureux mais attire l'attention
+  success: '#5F9EA0', // Bleu-vert - calme et positif
+  warning: '#C1803C', // Ocre/ambre - alerte naturelle
+  info: '#6A8D73', // Vert sauge - informatif et apaisant
+  danger: '#DB504A', // Rouge terre cuite - identique à notification
   
   // Couleurs supplémentaires pour les catégories d'événements
-  category1: '#4CC9F0', // Cyan
-  category2: '#4361EE', // Bleu électrique
-  category3: '#3A0CA3', // Violet
-  category4: '#7209B7', // Violet plus clair
-  category5: '#F72585', // Rose
-  category6: '#F8961E', // Orange
-  category7: '#4ECB71', // Vert vif
+  category1: '#5F9EA0', // Bleu-vert
+  category2: '#4A7C59', // Vert forêt
+  category3: '#8C5E58', // Marron chaud
+  category4: '#6A8D73', // Vert sauge
+  category5: '#C1803C', // Ocre/ambre
+  category6: '#997950', // Marron moyen
+  category7: '#7B9E89', // Vert de gris
 };
 
 const darkTheme = {
-  // Couleurs principales avec plus de saturation pour être visibles sur fond sombre
-  primary: '#4895EF', // Bleu légèrement plus clair pour contraste sur fond sombre
-  secondary: '#7209B7', // Violet plus clair pour meilleure visibilité
+  // Couleurs principales
+  primary: '#6A8D73', // Vert sauge plus clair pour contraste sur fond sombre
+  secondary: '#A67F78', // Marron rosé plus clair pour visibilité
   
   // Couleurs de fond
-  background: '#121212',
-  card: '#1E1E1E',
+  background: '#292520', // Brun foncé riche - chaleureux et reposant
+  card: '#3A3631', // Marron grisé - texture et profondeur
   
   // Couleurs de texte et bordures
-  text: '#FFFFFF',
-  border: '#2C2C2C',
+  text: '#ECE9E4', // Beige clair - doux pour les yeux
+  border: '#59534D', // Marron moyen-foncé - subtil mais visible
   
-  // Couleurs de notification et d'état - légèrement ajustées pour le thème sombre
-  notification: '#F72585', // Rose fuchsia maintenu pour l'impact
-  success: '#4CC9F0', // Cyan maintenu
-  warning: '#F8961E', // Orange maintenu
-  info: '#4895EF', // Bleu ciel maintenu
-  danger: '#F72585', // Rose fuchsia maintenu
+  // Couleurs de notification et d'état
+  notification: '#E67E73', // Rouge terre cuite plus clair
+  success: '#78B0B2', // Bleu-vert plus clair
+  warning: '#D9A76A', // Ocre/ambre plus clair
+  info: '#86A991', // Vert sauge plus clair
+  danger: '#E67E73', // Rouge terre cuite plus clair
   
-  // Couleurs de catégories - maintenues identiques pour la cohérence
-  category1: '#4CC9F0', // Cyan
-  category2: '#4361EE', // Bleu électrique
-  category3: '#3A0CA3', // Violet
-  category4: '#7209B7', // Violet plus clair
-  category5: '#F72585', // Rose
-  category6: '#F8961E', // Orange
-  category7: '#4ECB71', // Vert vif
+  // Couleurs de catégories
+  category1: '#78B0B2', // Bleu-vert plus clair
+  category2: '#6A8D73', // Vert sauge
+  category3: '#A67F78', // Marron rosé
+  category4: '#86A991', // Vert sauge plus clair
+  category5: '#D9A76A', // Ocre/ambre plus clair
+  category6: '#B3986E', // Marron moyen plus clair
+  category7: '#97B8A5', // Vert de gris plus clair
 };
 
 type Theme = typeof lightTheme;
