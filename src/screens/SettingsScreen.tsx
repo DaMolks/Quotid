@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import PushNotification from 'react-native-push-notification';
 
 import {useTheme} from '../context/ThemeContext';
 import {useNotification} from '../context/NotificationContext';
@@ -45,8 +46,10 @@ const SettingsScreen = () => {
     }
   };
 
-  // Tester une notification immédiate
+  // Tester une notification immédiate directement via PushNotification
   const testNotification = () => {
+    console.log("Envoi de notification de test DIRECTE...");
+    
     if (!hasPermission) {
       Alert.alert(
         'Permission requise',
@@ -75,44 +78,43 @@ const SettingsScreen = () => {
   
   // Envoyer une notification de test
   const sendTestNotification = () => {
-    console.log("Envoi de notification de test...");
+    console.log("Envoi de notification de test DIRECTE via PushNotification.localNotification");
     
     // Créer un ID unique pour cette notification de test
     const notificationId = `test-${Date.now()}`;
-    
-    // Délai très court (2 secondes)
-    const now = new Date();
-    now.setSeconds(now.getSeconds() + 2);
-    
-    console.log(`Programmation de notification avec ID: ${notificationId} pour: ${now.toISOString()}`);
-    
+
     try {
-      scheduleNotification({
+      // Contourner complètement notre contexte et utiliser directement PushNotification
+      PushNotification.localNotification({
         id: notificationId,
-        title: 'Notification de test',
-        message: 'Cette notification confirme que tout fonctionne correctement !',
-        date: now,
-        category: 'system',
-        data: {
-          type: 'test',
-          screen: 'Settings',
-          timestamp: Date.now(),
-        },
-        autoCancel: true,
-        autoCancelTime: 1, // Disparaît après 1 minute
+        channelId: 'system-channel', 
+        title: 'NOTIFICATION TEST ⚠️',
+        message: 'Cette notification de TEST est IMPORTANTE!',
+        playSound: true,
+        soundName: 'default',
+        // @ts-ignore - ces propriétés ne sont pas dans les types mais fonctionnent
+        importance: "high",
+        priority: "high",
+        smallIcon: "ic_notification",
+        largeIcon: "",
+        vibrate: true,
+        vibration: 300,
+        ignoreInForeground: false,
+        onlyAlertOnce: false,
+        visibility: "public"
       });
       
-      console.log("Notification programmée avec succès");
+      console.log("Notification DIRECTE envoyée");
       
       Alert.alert(
-        'Notification programmée',
-        'Une notification de test apparaîtra dans 2 secondes.\n\nSi vous ne la voyez pas, vérifiez les paramètres de notification de votre appareil.',
+        'Notification directe envoyée',
+        'Une notification de test a été envoyée directement.\n\nSi vous ne la voyez pas, vérifiez que les notifications ne sont pas bloquées par votre système.',
       );
     } catch (error) {
-      console.error("Erreur lors de la programmation de la notification:", error);
+      console.error("Erreur lors de l'envoi direct de la notification:", error);
       Alert.alert(
         'Erreur',
-        `Impossible de programmer la notification: ${error}`
+        `Impossible d'envoyer la notification: ${error}`
       );
     }
   };
