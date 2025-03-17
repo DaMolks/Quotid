@@ -16,6 +16,8 @@ import PushNotification from 'react-native-push-notification';
 
 import {useTheme} from '../context/ThemeContext';
 import {useNotification} from '../context/NotificationContext';
+// Import de notre nouveau système de notifications simples
+import SimpleNotification from '../utils/SimpleNotification';
 
 const SettingsScreen = () => {
   const {theme, isDark, toggleTheme, refreshTheme} = useTheme();
@@ -46,77 +48,70 @@ const SettingsScreen = () => {
     }
   };
 
-  // Tester une notification immédiate directement via PushNotification
-  const testNotification = () => {
-    console.log("Envoi de notification de test DIRECTE...");
+  // Tester les notifications avec toutes les approches possibles
+  const testNotifications = () => {
+    console.log("Test de toutes les méthodes de notification possibles...");
     
-    if (!hasPermission) {
-      Alert.alert(
-        'Permission requise',
-        'Veuillez activer les notifications pour tester cette fonctionnalité.',
-        [
-          {
-            text: 'Annuler',
-            style: 'cancel',
-          },
-          {
-            text: 'Activer',
-            onPress: async () => {
-              const granted = await requestPermissions();
-              if (granted) {
-                sendTestNotification();
-              }
-            },
-          },
-        ],
-      );
-      return;
-    }
-    
-    sendTestNotification();
-  };
-  
-  // Envoyer une notification de test
-  const sendTestNotification = () => {
-    console.log("Envoi de notification de test DIRECTE via PushNotification.localNotification");
-    
-    // Créer un ID unique pour cette notification de test
-    const notificationId = `test-${Date.now()}`;
-
+    // 1. Notifications natives via PushNotification directement
     try {
-      // Contourner complètement notre contexte et utiliser directement PushNotification
+      console.log("1. Test via PushNotification directement...");
       PushNotification.localNotification({
-        id: notificationId,
-        channelId: 'system-channel', 
-        title: 'NOTIFICATION TEST ⚠️',
-        message: 'Cette notification de TEST est IMPORTANTE!',
-        playSound: true,
-        soundName: 'default',
-        // @ts-ignore - ces propriétés ne sont pas dans les types mais fonctionnent
+        channelId: 'system-channel',
+        title: '1️⃣ Via Push Directe',
+        message: 'Test des notifications natives directes',
         importance: "high",
         priority: "high",
-        smallIcon: "ic_notification",
-        largeIcon: "",
         vibrate: true,
         vibration: 300,
-        ignoreInForeground: false,
-        onlyAlertOnce: false,
-        visibility: "public"
+      });
+    } catch (error) {
+      console.error("Erreur avec PushNotification directe:", error);
+    }
+    
+    // 2. Via notre context de notifications
+    try {
+      console.log("2. Test via useNotification context...");
+      if (hasPermission) {
+        const now = new Date();
+        now.setSeconds(now.getSeconds() + 2);
+        
+        scheduleNotification({
+          id: `test-context-${Date.now()}`,
+          title: '2️⃣ Via Context',
+          message: 'Test des notifications via Context',
+          date: now,
+          category: 'system',
+        });
+      }
+    } catch (error) {
+      console.error("Erreur avec context de notification:", error);
+    }
+    
+    // 3. Via notre système de notifications simples
+    try {
+      console.log("3. Test via SimpleNotification...");
+      
+      // Affichage immédiat
+      SimpleNotification.showReminder({
+        title: '3️⃣ Via SimpleNotification',
+        message: 'Si vous voyez cette alerte, au moins les alertes fonctionnent!'
       });
       
-      console.log("Notification DIRECTE envoyée");
-      
-      Alert.alert(
-        'Notification directe envoyée',
-        'Une notification de test a été envoyée directement.\n\nSi vous ne la voyez pas, vérifiez que les notifications ne sont pas bloquées par votre système.',
-      );
+      // Rappel programmé pour 3 secondes plus tard
+      const futureDate = new Date(Date.now() + 3000);
+      SimpleNotification.scheduleReminder({
+        title: '3️⃣ Rappel programmé',
+        message: 'Ce rappel a été programmé pour 3 secondes plus tard',
+        date: futureDate
+      });
     } catch (error) {
-      console.error("Erreur lors de l'envoi direct de la notification:", error);
-      Alert.alert(
-        'Erreur',
-        `Impossible d'envoyer la notification: ${error}`
-      );
+      console.error("Erreur avec SimpleNotification:", error);
     }
+    
+    Alert.alert(
+      'Tests lancés',
+      'Plusieurs méthodes de notification ont été tentées. Vérifiez les logs pour plus de détails.'
+    );
   };
 
   // Effacer toutes les données
@@ -244,11 +239,11 @@ const SettingsScreen = () => {
               styles.settingItem,
               {backgroundColor: theme.card, borderColor: theme.border},
             ]}
-            onPress={testNotification}>
+            onPress={testNotifications}>
             <View style={styles.settingContent}>
               <Icon name="bell-check-outline" size={24} color={theme.primary} />
               <Text style={[styles.settingTitle, {color: theme.text}]}>
-                Tester les notifications
+                Test multiméthode
               </Text>
             </View>
             <Icon name="chevron-right" size={24} color={theme.text} />
@@ -267,6 +262,27 @@ const SettingsScreen = () => {
               </Text>
             </View>
             <Icon name="open-in-new" size={24} color={theme.text} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Test simple alert */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, {color: theme.text}]}>
+            Tests de base
+          </Text>
+          <TouchableOpacity
+            style={[
+              styles.settingItem,
+              {backgroundColor: theme.card, borderColor: theme.border},
+            ]}
+            onPress={() => Alert.alert("Alerte basique", "Si vous voyez cette alerte, les alertes fonctionnent.")}>
+            <View style={styles.settingContent}>
+              <Icon name="alert-circle-outline" size={24} color={theme.primary} />
+              <Text style={[styles.settingTitle, {color: theme.text}]}>
+                Tester les alertes basiques
+              </Text>
+            </View>
+            <Icon name="chevron-right" size={24} color={theme.text} />
           </TouchableOpacity>
         </View>
 
