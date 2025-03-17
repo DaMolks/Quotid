@@ -53,6 +53,8 @@
           <intent-filter>
               <action android:name="com.quotid.TOGGLE_ITEM" />
               <action android:name="com.quotid.CLOSE_NOTIFICATION" />
+              <action android:name="com.quotid.COMPLETE_ALL" />
+              <action android:name="com.quotid.CLEAR_ALL" />
           </intent-filter>
       </receiver>
 
