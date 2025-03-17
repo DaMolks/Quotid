@@ -75,27 +75,46 @@ const SettingsScreen = () => {
   
   // Envoyer une notification de test
   const sendTestNotification = () => {
+    console.log("Envoi de notification de test...");
+    
+    // Créer un ID unique pour cette notification de test
+    const notificationId = `test-${Date.now()}`;
+    
+    // Délai très court (2 secondes)
     const now = new Date();
-    now.setSeconds(now.getSeconds() + 5); // 5 secondes à partir de maintenant
+    now.setSeconds(now.getSeconds() + 2);
     
-    scheduleNotification({
-      id: 'test-notification',
-      title: 'Notification de test',
-      message: 'Cette notification confirme que tout fonctionne correctement !',
-      date: now,
-      category: 'system',
-      data: {
-        type: 'test',
-        screen: 'Settings',
-      },
-      autoCancel: true,
-      autoCancelTime: 1, // Disparaît après 1 minute
-    });
+    console.log(`Programmation de notification avec ID: ${notificationId} pour: ${now.toISOString()}`);
     
-    Alert.alert(
-      'Notification programmée',
-      'Une notification de test apparaîtra dans 5 secondes.',
-    );
+    try {
+      scheduleNotification({
+        id: notificationId,
+        title: 'Notification de test',
+        message: 'Cette notification confirme que tout fonctionne correctement !',
+        date: now,
+        category: 'system',
+        data: {
+          type: 'test',
+          screen: 'Settings',
+          timestamp: Date.now(),
+        },
+        autoCancel: true,
+        autoCancelTime: 1, // Disparaît après 1 minute
+      });
+      
+      console.log("Notification programmée avec succès");
+      
+      Alert.alert(
+        'Notification programmée',
+        'Une notification de test apparaîtra dans 2 secondes.\n\nSi vous ne la voyez pas, vérifiez les paramètres de notification de votre appareil.',
+      );
+    } catch (error) {
+      console.error("Erreur lors de la programmation de la notification:", error);
+      Alert.alert(
+        'Erreur',
+        `Impossible de programmer la notification: ${error}`
+      );
+    }
   };
 
   // Effacer toutes les données
