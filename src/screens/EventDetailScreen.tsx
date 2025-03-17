@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  Switch,
 } from 'react-native';
 import {RouteProp} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
@@ -40,10 +41,11 @@ const EventDetailScreen = ({route, navigation}: Props) => {
   const {eventId} = route.params;
   const {theme} = useTheme();
   const {database} = useDatabase();
-  const {cancelNotification} = useNotification();
+  const {scheduleNotification, cancelNotification, requestPermissions, hasPermission} = useNotification();
 
   const [event, setEvent] = useState<Event | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [notificationEnabled, setNotificationEnabled] = useState(false);
 
   useEffect(() => {
     const loadEvent = async () => {
@@ -51,9 +53,14 @@ const EventDetailScreen = ({route, navigation}: Props) => {
         try {
           const loadedEvent = await getEventById(database, eventId);
           setEvent(loadedEvent);
+          
+          // Si l'événement est dans le futur et n'est pas marqué comme terminé,
+          // nous supposons qu'une notification peut être active
+          const eventInFuture = loadedEvent.startTime > Date.now();
+          setNotificationEnabled(eventInFuture && !loadedEvent.isCompleted);
         } catch (error) {
           console.error('Error loading event:', error);
-          Alert.alert('Erreur', 'Impossible de charger les détails de l\'\u00e9vénement');
+          Alert.alert('Erreur', 'Impossible de charger les détails de l\'événement');
         } finally {
           setIsLoading(false);
         }
@@ -85,6 +92,7 @@ const EventDetailScreen = ({route, navigation}: Props) => {
       // Si l'événement est marqué comme terminé, annuler toute notification associée
       if (newCompletionState) {
         cancelNotification(`event-${event.id}`);
+        setNotificationEnabled(false);
       }
 
       // Mettre à jour l'état local
@@ -96,7 +104,7 @@ const EventDetailScreen = ({route, navigation}: Props) => {
       console.error('Error toggling completion state:', error);
       Alert.alert(
         'Erreur',
-        'Impossible de mettre à jour l\'\u00e9tat de complétion de l\'\u00e9vénement',
+        'Impossible de mettre à jour l\'état de complétion de l\'événement',
       );
     }
   };
@@ -122,7 +130,7 @@ const EventDetailScreen = ({route, navigation}: Props) => {
               console.error('Error deleting event:', error);
               Alert.alert(
                 'Erreur',
-                'Impossible de supprimer l\'\u00e9vénement',
+                'Impossible de supprimer l\'événement',
               );
             }
           },
@@ -136,6 +144,76 @@ const EventDetailScreen = ({route, navigation}: Props) => {
     // Cette fonctionnalité sera implémentée ultérieurement
     // navigation.navigate('EditEvent', {eventId: event.id});
     Alert.alert('Information', 'Fonctionnalité non disponible pour le moment');
+  };
+
+  // Fonction pour gérer les notifications
+  const handleNotificationToggle = async (value: boolean) => {
+    if (!event) return;
+
+    // Si l'événement est déjà passé, on ne peut pas activer de notification
+    if (event.startTime < Date.now()) {
+      Alert.alert(
+        'Impossible',
+        'Vous ne pouvez pas programmer de notification pour un événement déjà passé.'
+      );
+      return;
+    }
+
+    // Si l'événement est marqué comme terminé, on ne peut pas activer de notification
+    if (event.isCompleted) {
+      Alert.alert(
+        'Impossible',
+        'Vous ne pouvez pas programmer de notification pour un événement déjà terminé.'
+      );
+      return;
+    }
+
+    // Si on active les notifications
+    if (value) {
+      // Vérifier les permissions
+      if (!hasPermission) {
+        const granted = await requestPermissions();
+        if (!granted) {
+          Alert.alert(
+            'Permission refusée',
+            'Vous devez autoriser les notifications pour utiliser cette fonctionnalité.'
+          );
+          return;
+        }
+      }
+
+      // Programmation d'une notification 15 minutes avant l'événement
+      const notificationTime = new Date(event.startTime);
+      notificationTime.setMinutes(notificationTime.getMinutes() - 15);
+
+      // Si le temps de notification est déjà passé, on programme une notification immédiate
+      const now = new Date();
+      if (notificationTime.getTime() < now.getTime()) {
+        notificationTime.setTime(now.getTime() + 15000); // +15 secondes
+      }
+
+      // Programmer la notification
+      scheduleNotification({
+        id: `event-${event.id}`,
+        title: `🔔 ${event.title}`,
+        message: `Début ${notificationTime.getTime() < now.getTime() + 30000 ? 'imminent' : 'dans 15 minutes'}${event.location ? ` à ${event.location}` : ''}`,
+        date: notificationTime,
+        category: 'reminder',
+        data: {eventId: event.id},
+        autoCancel: true,
+        autoCancelTime: 30, // Disparaît 30 minutes après
+      });
+
+      Alert.alert(
+        'Notification programmée',
+        `Vous recevrez une notification ${notificationTime.getTime() < now.getTime() + 30000 ? 'dans quelques instants' : '15 minutes avant le début de l\'événement'}.`
+      );
+    } else {
+      // Annuler la notification
+      cancelNotification(`event-${event.id}`);
+    }
+
+    setNotificationEnabled(value);
   };
 
   if (isLoading) {
@@ -169,6 +247,34 @@ const EventDetailScreen = ({route, navigation}: Props) => {
     Math.round((event.endTime - event.startTime) / 60000),
   );
 
+  // Déterminer si l'événement est passé, en cours, ou à venir
+  const now = Date.now();
+  const isPast = event.endTime < now;
+  const isCurrent = event.startTime <= now && event.endTime >= now;
+  const isFuture = event.startTime > now;
+
+  // Texte du statut temporel
+  let timeStatus = '';
+  if (isPast) {
+    timeStatus = 'Événement passé';
+  } else if (isCurrent) {
+    timeStatus = 'En cours';
+  } else if (isFuture) {
+    // Calculer le temps restant
+    const diffMs = event.startTime - now;
+    const diffDays = Math.floor(diffMs / 86400000); // jours
+    const diffHrs = Math.floor((diffMs % 86400000) / 3600000); // heures
+    const diffMins = Math.round(((diffMs % 86400000) % 3600000) / 60000); // minutes
+    
+    if (diffDays > 0) {
+      timeStatus = `Dans ${diffDays} jour${diffDays > 1 ? 's' : ''}`;
+    } else if (diffHrs > 0) {
+      timeStatus = `Dans ${diffHrs} heure${diffHrs > 1 ? 's' : ''}`;
+    } else {
+      timeStatus = `Dans ${diffMins} minute${diffMins > 1 ? 's' : ''}`;
+    }
+  }
+
   return (
     <View style={[styles.container, {backgroundColor: theme.background}]}>
       <ScrollView style={styles.scrollView}>
@@ -193,6 +299,15 @@ const EventDetailScreen = ({route, navigation}: Props) => {
             </Text>
             <Text style={styles.duration}>{duration}</Text>
           </View>
+        </View>
+
+        {/* Badge de statut temporel */}
+        <View style={[styles.timeStatusContainer, {
+          backgroundColor: isPast ? theme.border : 
+                          isCurrent ? theme.success : 
+                          theme.info
+        }]}>
+          <Text style={styles.timeStatusText}>{timeStatus}</Text>
         </View>
 
         {/* Détails de l'événement */}
@@ -225,6 +340,30 @@ const EventDetailScreen = ({route, navigation}: Props) => {
               </View>
             </View>
           ) : null}
+
+          {/* Notifications - Nouvelle section */}
+          {isFuture && !event.isCompleted && (
+            <View style={styles.section}>
+              <Text style={[styles.sectionTitle, {color: theme.text}]}>
+                Notifications
+              </Text>
+              <View style={styles.notificationContainer}>
+                <View style={styles.notificationContent}>
+                  <Icon name="bell-outline" size={24} color={theme.primary} />
+                  <Text style={[styles.notificationText, {color: theme.text}]}>
+                    Rappel 15 minutes avant
+                  </Text>
+                </View>
+                <Switch
+                  value={notificationEnabled}
+                  onValueChange={handleNotificationToggle}
+                  trackColor={{false: '#767577', true: theme.primary}}
+                  thumbColor="#f4f3f4"
+                  disabled={!isFuture || event.isCompleted}
+                />
+              </View>
+            </View>
+          )}
 
           {/* Statut de complétion */}
           <View style={styles.section}>
@@ -334,6 +473,19 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 14,
   },
+  timeStatusContainer: {
+    alignSelf: 'flex-start',
+    marginLeft: 20,
+    marginTop: -10,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 16,
+  },
+  timeStatusText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
   detailsContainer: {
     padding: 20,
   },
@@ -354,6 +506,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   locationText: {
+    fontSize: 16,
+    marginLeft: 8,
+  },
+  notificationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  notificationContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  notificationText: {
     fontSize: 16,
     marginLeft: 8,
   },
