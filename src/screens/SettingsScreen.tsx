@@ -57,23 +57,29 @@ const SettingsScreen = () => {
   const testNotifications = () => {
     console.log("Test des notifications de base...");
     
-    // Via notre context de notifications (maintenant approche directe)
     try {
-      console.log("Test via useNotification context...");
-      if (hasPermission) {
-        const now = new Date();
-        now.setSeconds(now.getSeconds() + 2);
-        
-        scheduleNotification({
-          id: `test-std-${Date.now()}`,
-          title: '🔔 Notification Standard',
-          message: 'Ceci est un test de notification standard',
-          date: now,
-          category: 'system',
-        });
-      }
+      // Utiliser directement PushNotification pour plus de fiabilité
+      PushNotification.localNotification({
+        channelId: 'system-channel',
+        title: '🔔 Notification Standard',
+        message: 'Ceci est un test de notification standard directe',
+        importance: "high",
+        priority: "high",
+        vibrate: true,
+        vibration: 300,
+        playSound: true,
+        soundName: 'default',
+      });
+      
+      console.log("Notification standard envoyée directement via PushNotification");
     } catch (error) {
-      console.error("Erreur avec context de notification:", error);
+      console.error("Erreur avec notification directe:", error);
+      
+      // Essayer via SimpleNotification comme fallback
+      SimpleNotification.showReminder({
+        title: '🔔 Notification Standard (fallback)',
+        message: 'Ceci est un test de notification via fallback'
+      });
     }
   };
   
@@ -81,34 +87,39 @@ const SettingsScreen = () => {
   const testInteractiveNotifications = () => {
     console.log("Test des notifications interactives...");
     
-    if (!hasPermission) {
-      requestPermissions().then(granted => {
-        if (granted) {
-          sendInteractiveNotification();
-        } else {
-          Alert.alert(
-            'Permission manquante',
-            'Vous devez autoriser les notifications pour voir cet exemple'
-          );
-        }
+    try {
+      // Utiliser directement PushNotification pour plus de fiabilité
+      PushNotification.localNotification({
+        channelId: 'interactive-channel',
+        title: '⭐ Notification Interactive',
+        message: 'Exemple de notification avec actions personnalisées',
+        importance: "high",
+        priority: "high",
+        vibrate: true,
+        vibration: 300,
+        playSound: true,
+        soundName: 'default',
+        actions: ['Accepter', 'Refuser', 'Plus tard'],
       });
-      return;
+      
+      console.log("Notification interactive envoyée directement via PushNotification");
+    } catch (error) {
+      console.error("Erreur avec notification interactive directe:", error);
+      Alert.alert(
+        'Erreur',
+        'Impossible d\'envoyer la notification interactive. Erreur: ' + error.message
+      );
     }
-    
-    sendInteractiveNotification();
   };
   
   // Fonction pour envoyer une notification interactive
   const sendInteractiveNotification = () => {
-    // Exemple 1: Notification interactive pour un événement à venir
-    const now = new Date();
-    now.setSeconds(now.getSeconds() + 2); // Dans 2 secondes
-    
+    // Cette fonction n'est plus utilisée directement
     scheduleInteractiveNotification({
       id: `interactive-${Date.now()}`,
       title: '⭐ Exemple: Rappel de réunion',
       message: 'Réunion d\'équipe dans 15 minutes. Préparer les documents?',
-      date: now,
+      date: new Date(),
       actions: ['Accepter', 'Refuser', 'Plus tard'],
       category: 'interactive',
       data: {
@@ -116,39 +127,47 @@ const SettingsScreen = () => {
         importance: 'high'
       }
     });
-    
-    Alert.alert(
-      'Notification interactive envoyée',
-      'Une notification avec boutons d\'action va apparaître dans 2 secondes'
-    );
   };
   
   // Exemple de notification pour un événement
   const testEventReminder = () => {
     console.log("Test de notification pour un événement...");
     
-    if (!hasPermission) {
-      requestPermissions().then(granted => {
-        if (granted) {
-          sendEventReminder();
-        }
+    try {
+      // Utiliser directement PushNotification pour plus de fiabilité
+      PushNotification.localNotification({
+        channelId: 'reminders-channel',
+        title: '📅 Rappel: Faire le ménage',
+        message: 'N\'oubliez pas de nettoyer l\'appartement aujourd\'hui',
+        importance: "high",
+        priority: "high",
+        vibrate: true,
+        vibration: 300,
+        playSound: true,
+        soundName: 'default',
+        actions: ['Terminer', 'Reporter', 'Détails'],
       });
-      return;
+      
+      console.log("Notification de rappel envoyée directement via PushNotification");
+    } catch (error) {
+      console.error("Erreur avec notification de rappel directe:", error);
+      
+      // Essayer via SimpleNotification comme fallback
+      SimpleNotification.showReminder({
+        title: '📅 Rappel (fallback)',
+        message: 'N\'oubliez pas de nettoyer l\'appartement aujourd\'hui'
+      });
     }
-    
-    sendEventReminder();
   };
   
   // Fonction pour envoyer une notification de rappel d'événement
   const sendEventReminder = () => {
-    const now = new Date();
-    now.setSeconds(now.getSeconds() + 2);
-    
+    // Cette fonction n'est plus utilisée directement
     scheduleNotification({
       id: `event-reminder-${Date.now()}`,
       title: '📅 Rappel: Faire le ménage',
       message: 'N\'oubliez pas de nettoyer l\'appartement aujourd\'hui',
-      date: now,
+      date: new Date(),
       category: 'reminder',
       actions: ['Terminer', 'Reporter', 'Détails'],
       data: {
@@ -156,40 +175,46 @@ const SettingsScreen = () => {
         priority: 'medium'
       }
     });
-    
-    Alert.alert(
-      'Rappel envoyé',
-      'Une notification de rappel d\'événement va apparaître dans 2 secondes'
-    );
   };
   
   // Test de notification personnalisée avec icône et couleur
   const testCustomNotification = () => {
     console.log("Test de notification personnalisée...");
     
-    if (!hasPermission) {
-      requestPermissions().then(granted => {
-        if (granted) {
-          sendCustomNotification();
-        }
+    try {
+      // Utiliser directement PushNotification pour plus de fiabilité
+      PushNotification.localNotification({
+        channelId: 'events-channel',
+        title: '🌟 Notification Personnalisée',
+        message: 'Cette notification utilise le canal événements',
+        importance: "high",
+        priority: "high",
+        vibrate: true,
+        vibration: 300,
+        playSound: true,
+        soundName: 'default',
       });
-      return;
+      
+      console.log("Notification personnalisée envoyée directement via PushNotification");
+    } catch (error) {
+      console.error("Erreur avec notification personnalisée directe:", error);
+      
+      // Essayer via SimpleNotification comme fallback
+      SimpleNotification.showReminder({
+        title: '🌟 Notification Personnalisée (fallback)',
+        message: 'Cette notification est envoyée via le système de secours'
+      });
     }
-    
-    sendCustomNotification();
   };
   
   // Fonction pour envoyer une notification personnalisée
   const sendCustomNotification = () => {
-    const now = new Date();
-    now.setSeconds(now.getSeconds() + 2);
-    
-    // Notification personnalisée avec des données complémentaires
+    // Cette fonction n'est plus utilisée directement
     scheduleNotification({
       id: `custom-${Date.now()}`,
       title: '🌟 Notification Personnalisée',
       message: 'Cette notification montre comment personnaliser l\'apparence et les comportements',
-      date: now,
+      date: new Date(),
       category: 'system',
       // Personnalisation supplémentaire
       autoCancel: true,
@@ -202,11 +227,6 @@ const SettingsScreen = () => {
         // Vous pouvez ajouter d'autres données pertinentes ici
       }
     });
-    
-    Alert.alert(
-      'Notification personnalisée envoyée',
-      'Une notification avec données personnalisées va apparaître dans 2 secondes'
-    );
   };
   
   // Diagnostic et réparation des notifications
