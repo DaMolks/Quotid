@@ -58,7 +58,7 @@
           </intent-filter>
       </receiver>
 
-      <!-- Service de notifications -->
+      <!-- Service de notifications classique de React Native Push Notification -->
       <service
           android:name="com.dieam.reactnativepushnotification.modules.RNPushNotificationListenerService"
           android:exported="false" >
@@ -67,5 +67,29 @@
           </intent-filter>
       </service>
       
+      <!-- Notre service de Messaging Firebase personnalisé -->
+      <service
+          android:name=".QuotidFirebaseMessagingService"
+          android:exported="false">
+          <intent-filter>
+              <action android:name="com.google.firebase.MESSAGING_EVENT" />
+          </intent-filter>
+      </service>
+      
+      <!-- Icône de notification par défaut -->
+      <meta-data
+          android:name="com.google.firebase.messaging.default_notification_icon"
+          android:resource="@mipmap/ic_launcher" />
+          
+      <!-- Couleur de notification par défaut -->
+      <meta-data
+          android:name="com.google.firebase.messaging.default_notification_color"
+          android:resource="@color/primary_dark" />
+          
+      <!-- Canal de notification par défaut (pour Android 8.0+) -->
+      <meta-data
+          android:name="com.google.firebase.messaging.default_notification_channel_id"
+          android:value="firebase-notifications" />
+          
     </application>
 </manifest>
