@@ -103,7 +103,8 @@ public class AdvancedNotificationBuilder {
                 
                 // Définir le texte et l'état coché
                 itemView.setTextViewText(R.id.item_text, item.getText());
-                itemView.setChecked(R.id.item_checkbox, item.isChecked());
+                // Correction: utiliser setBoolean au lieu de setChecked
+                itemView.setBoolean(R.id.item_checkbox, "setChecked", item.isChecked());
                 
                 // Définir l'action pour le clic sur la case à cocher
                 Intent toggleIntent = new Intent(context, NotificationActionReceiver.class);
