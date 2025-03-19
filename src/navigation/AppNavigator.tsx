@@ -3,12 +3,13 @@ import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {createStackNavigator} from '@react-navigation/stack';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-// Import des écrans (ces fichiers seront créés plus tard)
+// Import des écrans
 import CalendarScreen from '../screens/CalendarScreen';
 import EventDetailScreen from '../screens/EventDetailScreen';
 import CreateEventScreen from '../screens/CreateEventScreen';
 import StatsScreen from '../screens/StatsScreen';
 import SettingsScreen from '../screens/SettingsScreen';
+import NotificationSettingsScreen from '../screens/NotificationSettingsScreen';
 
 // Import du hook de thème
 import {useTheme} from '../context/ThemeContext';
@@ -18,6 +19,7 @@ export type RootStackParamList = {
   Main: undefined;
   EventDetail: {eventId: number};
   CreateEvent: {date?: string; categoryId?: number};
+  NotificationSettings: undefined;
 };
 
 export type MainTabParamList = {
@@ -35,7 +37,7 @@ const MainTabNavigator = () => {
 
   return (
     <Tab.Navigator
-      screenOptions={{
+      screenOptions={({route}) => ({
         tabBarActiveTintColor: theme.primary,
         tabBarInactiveTintColor: theme.text,
         tabBarStyle: {
@@ -48,7 +50,7 @@ const MainTabNavigator = () => {
           borderBottomWidth: 1,
         },
         headerTintColor: theme.text,
-      }}>
+      })}>
       <Tab.Screen
         name="Calendar"
         component={CalendarScreen}
@@ -114,6 +116,11 @@ const AppNavigator = () => {
         name="CreateEvent"
         component={CreateEventScreen}
         options={{title: 'Nouvel événement'}}
+      />
+      <Stack.Screen
+        name="NotificationSettings"
+        component={NotificationSettingsScreen}
+        options={{title: 'Notifications'}}
       />
     </Stack.Navigator>
   );
