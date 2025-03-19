@@ -1,6 +1,8 @@
 apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
+// Ajouter le plugin Google Services après les autres plugins
+apply plugin: "com.google.gms.google-services"
 
 /**
  * This is the configuration block to customize your React Native Android app.
@@ -84,6 +86,10 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
+        // Multilingue
+        resConfigs "fr"
+        // Firebase Messaging a besoin de ce config pour fonctionner correctement
+        multiDexEnabled true
     }
     signingConfigs {
         debug {
@@ -168,4 +174,12 @@ dependencies {
     // Force utilisation des versions AndroidX pour remplacer les anciennes bibliothèques de support
     implementation 'androidx.core:core:1.13.1'
     implementation 'androidx.appcompat:appcompat:1.6.1'
+    
+    // Multidex support
+    implementation 'androidx.multidex:multidex:2.0.1'
+    
+    // Firebase dependencies
+    implementation platform('com.google.firebase:firebase-bom:32.8.1')
+    implementation 'com.google.firebase:firebase-analytics'
+    implementation 'com.google.firebase:firebase-messaging'
 }
