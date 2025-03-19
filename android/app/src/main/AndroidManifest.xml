@@ -1,4 +1,5 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Permissions Internet -->
     <uses-permission android:name="android.permission.INTERNET" />
@@ -81,15 +82,17 @@
           android:name="com.google.firebase.messaging.default_notification_icon"
           android:resource="@mipmap/ic_launcher" />
           
-      <!-- Couleur de notification par défaut -->
+      <!-- Couleur de notification par défaut - avec outil de remplacement -->
       <meta-data
           android:name="com.google.firebase.messaging.default_notification_color"
-          android:resource="@color/primary_dark" />
+          android:resource="@color/primary_dark" 
+          tools:replace="android:resource" />
           
-      <!-- Canal de notification par défaut (pour Android 8.0+) -->
+      <!-- Canal de notification par défaut (pour Android 8.0+) - avec outil de remplacement -->
       <meta-data
           android:name="com.google.firebase.messaging.default_notification_channel_id"
-          android:value="firebase-notifications" />
+          android:value="firebase-notifications" 
+          tools:replace="android:value" />
           
     </application>
 </manifest>
