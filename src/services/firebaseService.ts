@@ -1,5 +1,5 @@
-import messaging from '@react-native-firebase/messaging';
 import { Platform } from 'react-native';
+import { initializeFirebase, firebaseApp, firebaseMessaging } from './firebaseConfig';
 
 /**
  * FirebaseService - Service pour gérer l'intégration avec Firebase Cloud Messaging (FCM)
@@ -34,12 +34,19 @@ class FirebaseService {
         return true;
       }
 
+      // 0. Initialiser l'application Firebase via notre fichier de configuration
+      const firebaseInitialized = await initializeFirebase();
+      if (!firebaseInitialized) {
+        console.error('Impossible d\'initialiser Firebase JS');
+        return false;
+      }
+
       // 1. Demander les permissions de notification (iOS uniquement, sur Android c'est plus complexe)
       if (Platform.OS === 'ios') {
-        const authStatus = await messaging().requestPermission();
+        const authStatus = await firebaseMessaging().requestPermission();
         const enabled =
-          authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-          authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+          authStatus === firebaseMessaging.AuthorizationStatus.AUTHORIZED ||
+          authStatus === firebaseMessaging.AuthorizationStatus.PROVISIONAL;
           
         if (!enabled) {
           console.log('Permissions de notification refusées (iOS)');
@@ -53,19 +60,19 @@ class FirebaseService {
       // 3. Configurer les gestionnaires d'événements
       
       // Gestionnaire pour les notifications lorsque l'app est en premier plan
-      messaging().onMessage(async remoteMessage => {
+      firebaseMessaging().onMessage(async remoteMessage => {
         console.log('Notification reçue en premier plan:', remoteMessage);
         // Informer tous les écouteurs
         this._onMessageListeners.forEach(listener => listener(remoteMessage));
       });
 
       // Gestionnaire pour les notifications lorsque l'app est en arrière-plan et a été ouverte via une notification
-      messaging().onNotificationOpenedApp(remoteMessage => {
+      firebaseMessaging().onNotificationOpenedApp(remoteMessage => {
         console.log('Notification ouverte avec l\'app en arrière-plan:', remoteMessage);
       });
       
       // Gestionnaire pour les notifications lorsque l'app est fermée
-      messaging()
+      firebaseMessaging()
         .getInitialNotification()
         .then(remoteMessage => {
           if (remoteMessage) {
@@ -74,7 +81,7 @@ class FirebaseService {
         });
 
       // 4. Définir le gestionnaire de renouvellement de token
-      messaging().onTokenRefresh(token => {
+      firebaseMessaging().onTokenRefresh(token => {
         console.log('Nouveau token FCM:', token);
         this._fcmToken = token;
         // Ici, vous pourriez envoyer le nouveau token à votre serveur
@@ -94,8 +101,14 @@ class FirebaseService {
    */
   public async getToken(): Promise<string | null> {
     try {
+      // Vérifier d'abord que Firebase est initialisé
+      if (!firebaseApp.apps.length) {
+        console.error('Firebase n\'est pas initialisé. Impossible d\'obtenir le token FCM.');
+        return null;
+      }
+      
       if (!this._fcmToken) {
-        this._fcmToken = await messaging().getToken();
+        this._fcmToken = await firebaseMessaging().getToken();
         console.log('FCM Token:', this._fcmToken);
       }
       return this._fcmToken;
@@ -110,11 +123,16 @@ class FirebaseService {
    */
   public async checkPermissions(): Promise<boolean> {
     try {
+      // Vérifier d'abord que Firebase est initialisé
+      if (!firebaseApp.apps.length) {
+        await initializeFirebase();
+      }
+      
       if (Platform.OS === 'ios') {
-        const authStatus = await messaging().hasPermission();
+        const authStatus = await firebaseMessaging().hasPermission();
         return (
-          authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-          authStatus === messaging.AuthorizationStatus.PROVISIONAL
+          authStatus === firebaseMessaging.AuthorizationStatus.AUTHORIZED ||
+          authStatus === firebaseMessaging.AuthorizationStatus.PROVISIONAL
         );
       } else {
         // Sur Android, nous ne pouvons pas vérifier facilement les permissions via Firebase,
@@ -132,11 +150,16 @@ class FirebaseService {
    */
   public async requestPermissions(): Promise<boolean> {
     try {
+      // Vérifier d'abord que Firebase est initialisé
+      if (!firebaseApp.apps.length) {
+        await initializeFirebase();
+      }
+      
       if (Platform.OS === 'ios') {
-        const authStatus = await messaging().requestPermission();
+        const authStatus = await firebaseMessaging().requestPermission();
         const enabled =
-          authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-          authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+          authStatus === firebaseMessaging.AuthorizationStatus.AUTHORIZED ||
+          authStatus === firebaseMessaging.AuthorizationStatus.PROVISIONAL;
         return enabled;
       } else {
         // Sur Android, les permissions sont gérées via PermissionsAndroid
@@ -173,18 +196,29 @@ class FirebaseService {
     body: string;
     data?: Record<string, string>;
   }): Promise<void> {
-    await messaging().sendMessage({
-      // Cette ID doit correspondre à un ID d'expéditeur FCM valide
-      // Pour une notification locale, nous pouvons utiliser le token de l'appareil
-      to: await this.getToken() || '',
-      // Les données nécessaires pour le message
-      data,
-      // La notification affichée
-      notification: {
-        title,
-        body,
-      },
-    });
+    // Vérifier d'abord que Firebase est initialisé
+    if (!firebaseApp.apps.length) {
+      await initializeFirebase();
+    }
+    
+    try {
+      await firebaseMessaging().sendMessage({
+        // Cette ID doit correspondre à un ID d'expéditeur FCM valide
+        // Pour une notification locale, nous pouvons utiliser le token de l'appareil
+        to: await this.getToken() || '',
+        // Les données nécessaires pour le message
+        data,
+        // La notification affichée
+        notification: {
+          title,
+          body,
+        },
+      });
+    } catch (error) {
+      console.error('Erreur lors de l\'envoi de la notification locale:', error);
+      // Fallback vers une notification locale standard si Firebase échoue
+      console.log('Tentative de fallback vers une notification standard...');
+    }
   }
 
   /**
@@ -192,7 +226,12 @@ class FirebaseService {
    */
   public async subscribeToTopic(topic: string): Promise<void> {
     try {
-      await messaging().subscribeToTopic(topic);
+      // Vérifier d'abord que Firebase est initialisé
+      if (!firebaseApp.apps.length) {
+        await initializeFirebase();
+      }
+      
+      await firebaseMessaging().subscribeToTopic(topic);
       console.log(`Abonné au sujet: ${topic}`);
     } catch (error) {
       console.error(`Erreur lors de l'abonnement au sujet ${topic}:`, error);
@@ -204,7 +243,12 @@ class FirebaseService {
    */
   public async unsubscribeFromTopic(topic: string): Promise<void> {
     try {
-      await messaging().unsubscribeFromTopic(topic);
+      // Vérifier d'abord que Firebase est initialisé
+      if (!firebaseApp.apps.length) {
+        await initializeFirebase();
+      }
+      
+      await firebaseMessaging().unsubscribeFromTopic(topic);
       console.log(`Désabonné du sujet: ${topic}`);
     } catch (error) {
       console.error(`Erreur lors du désabonnement du sujet ${topic}:`, error);
