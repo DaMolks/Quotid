@@ -4,4 +4,6 @@
     <color name="primary_dark">#3C8D2F</color>
     <color name="accent">#8C5E58</color>
     <color name="notification_color">#4A7C59</color>
+    <color name="status_bar_color">#121212</color>
+    <color name="white">#FFFFFF</color>
 </resources>
